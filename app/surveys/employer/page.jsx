@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export default function EmployerSurvey() {
-  // Email delivery preference
-  const [deliveryMethod, setDeliveryMethod] = useState('screen');
+  // Email (required)
   const [email, setEmail] = useState('');
   
   // Form data
@@ -55,7 +54,7 @@ export default function EmployerSurvey() {
           company_size: formData.companySize,
           location: formData.location,
           industry: formData.industry,
-          email: deliveryMethod === 'email' ? email : null,
+          email: email, // Always required now
           current_broker: formData.currentBroker,
           years_with_broker: formData.yearsWithBroker,
           switching_consideration: formData.switchingConsideration,
@@ -80,11 +79,9 @@ export default function EmployerSurvey() {
 
       setMatches(brokersData || []);
 
-      // If email provided, send matches
-      if (deliveryMethod === 'email' && email) {
-        // TODO: Integrate email service (SendGrid, Resend, etc.)
-        console.log('Send email to:', email, 'with matches:', brokersData);
-      }
+      // Send matches via email (always, since email is required)
+      // TODO: Integrate email service (SendGrid, Resend, etc.)
+      console.log('Send email to:', email, 'with matches:', brokersData);
 
       setSubmitted(true);
     } catch (error) {
@@ -98,7 +95,7 @@ export default function EmployerSurvey() {
   if (submitted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 text-white py-12 px-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold mb-4">🎉 Your Broker Matches Are Ready!</h1>
             <p className="text-xl text-purple-200">
@@ -164,28 +161,24 @@ export default function EmployerSurvey() {
             ))}
           </div>
 
-          {deliveryMethod === 'email' && (
-            <div className="mt-12 bg-green-500/20 border border-green-500/50 rounded-lg p-6 text-center">
-              <p className="text-lg">
-                ✉️ We've also emailed these matches to <strong>{email}</strong>
-              </p>
-              <p className="text-sm text-purple-200 mt-2">
-                Check your inbox for <strong>full contact details</strong> and our <strong>$50 interview invitation</strong>
-              </p>
-            </div>
-          )}
+          <div className="mt-12 bg-green-500/20 border border-green-500/50 rounded-lg p-6 text-center">
+            <p className="text-lg">
+              ✉️ Check your inbox at <strong>{email}</strong>
+            </p>
+            <p className="text-sm text-purple-200 mt-2">
+              We've sent you <strong>detailed broker profiles</strong> with <strong>full contact information</strong> and <strong>next steps</strong>
+            </p>
+          </div>
 
           <div className="mt-12 bg-white/10 backdrop-blur-sm rounded-lg p-8 text-center">
-            <h3 className="text-2xl font-bold mb-4">Want to Help Other Startups?</h3>
+            <h3 className="text-2xl font-bold mb-4">Want to Help Shape This?</h3>
             <p className="text-purple-200 mb-6">
-              Share your broker search experience in a <strong>20-minute interview</strong> and get a <strong>$50 Amazon gift card</strong>
+              I may reach out personally to learn more about your broker search experience. 
+              Your insights help us build <strong>better matching</strong> for tech startups like yours.
             </p>
-            <a
-              href="mailto:youremail@brokerMatch.com?subject=Interview Request"
-              className="inline-block bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-lg font-bold text-lg transition"
-            >
-              Book Your Interview
-            </a>
+            <p className="text-sm text-purple-300">
+              Keep an eye on your inbox - we'd love to hear your story
+            </p>
           </div>
         </div>
       </div>
@@ -199,7 +192,7 @@ export default function EmployerSurvey() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold mb-4">
-            10 Minutes to Your Perfect Benefits Broker Match
+            3 Minutes to Your Perfect Benefits Broker Match
           </h1>
           <p className="text-2xl text-purple-200">
             Answer 10 questions → Get 3 personalized matches <strong>instantly</strong>
@@ -213,58 +206,36 @@ export default function EmployerSurvey() {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           
-          {/* Email Delivery Option - AT THE TOP */}
+          {/* Note: Questions will be in 3-column grid below */}
+          
+          {/* Email - Required */}
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-4">
-              How should we deliver your matches?
+              Where should we send your matches?
             </h3>
             
-            <div className="space-y-3 mb-4">
-              <label className="flex items-start gap-3 cursor-pointer p-3 rounded hover:bg-white/5 transition">
-                <input 
-                  type="radio" 
-                  name="delivery"
-                  value="screen"
-                  checked={deliveryMethod === 'screen'}
-                  onChange={(e) => setDeliveryMethod(e.target.value)}
-                  className="mt-1"
-                />
-                <span>Show on-screen only (anonymous, instant results)</span>
-              </label>
-              
-              <label className="flex items-start gap-3 cursor-pointer p-3 rounded hover:bg-white/5 transition">
-                <input 
-                  type="radio" 
-                  name="delivery"
-                  value="email"
-                  checked={deliveryMethod === 'email'}
-                  onChange={(e) => setDeliveryMethod(e.target.value)}
-                  className="mt-1"
-                />
-                <div>
-                  <div>Email me a copy with <strong>full broker contact details</strong> and <strong>optional $50 interview invite</strong></div>
-                </div>
-              </label>
-            </div>
+            <p className="text-purple-200 mb-4">
+              We'll email you <strong>3 broker matches</strong> with <strong>full contact details</strong> and <strong>why each broker fits your company</strong>.
+            </p>
             
-            {deliveryMethod === 'email' && (
-              <div className="mt-4">
-                <input
-                  type="email"
-                  placeholder="your.email@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required={deliveryMethod === 'email'}
-                  className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 placeholder-purple-400 font-medium"
-                />
-                <p className="text-sm text-purple-300 mt-2">
-                  We'll send <strong>detailed broker profiles</strong>, <strong>direct contact information</strong>, and <strong>match reasoning</strong>
-                </p>
-              </div>
-            )}
+            <input
+              type="email"
+              placeholder="your.email@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 placeholder-purple-400 font-medium"
+            />
+            
+            <p className="text-sm text-purple-300 mt-3">
+              We may personally reach out to learn more about your broker search experience. Your insights help us improve matching for everyone.
+            </p>
           </div>
 
           <div className="h-px bg-white/20"></div>
+
+          {/* Questions Grid - 3 columns on desktop, 2 on tablet, 1 on mobile */}
+          <div className="space-y-6">
 
           {/* Question 1: Company Name */}
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
@@ -504,6 +475,9 @@ export default function EmployerSurvey() {
               ))}
             </div>
           </div>
+
+          </div>
+          {/* End Questions Grid */}
 
           {/* Submit Button */}
           <div className="pt-6">

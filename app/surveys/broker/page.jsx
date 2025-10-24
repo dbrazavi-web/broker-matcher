@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export default function BrokerSurvey() {
-  // Email delivery preference
-  const [deliveryMethod, setDeliveryMethod] = useState('screen');
+  // Email (required)
   const [email, setEmail] = useState('');
   
   // Form data
@@ -54,7 +53,7 @@ export default function BrokerSurvey() {
           firm_name: formData.firmName,
           contact_name: formData.contactName,
           location: formData.location,
-          email: deliveryMethod === 'email' ? email : null,
+          email: email, // Always required now
           service_area: formData.serviceArea,
           company_size_focus: formData.companySizeFocus,
           industries_served: formData.industriesServed,
@@ -101,10 +100,9 @@ export default function BrokerSurvey() {
       ]);
 
       // If email provided, send matches
-      if (deliveryMethod === 'email' && email) {
-        // TODO: Integrate email service
-        console.log('Send email to:', email, 'with matches');
-      }
+      // Email is now always required
+      // TODO: Integrate email service
+      console.log('Send email to:', email, 'with matches');
 
       setSubmitted(true);
     } catch (error) {
@@ -118,7 +116,7 @@ export default function BrokerSurvey() {
   if (submitted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 text-white py-12 px-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold mb-4">🎯 Your Qualified Lead Matches Are Ready!</h1>
             <p className="text-xl text-purple-200">
@@ -162,28 +160,24 @@ export default function BrokerSurvey() {
             ))}
           </div>
 
-          {deliveryMethod === 'email' && (
-            <div className="mt-12 bg-green-500/20 border border-green-500/50 rounded-lg p-6 text-center">
-              <p className="text-lg">
-                ✉️ We've also emailed these leads to <strong>{email}</strong>
-              </p>
-              <p className="text-sm text-purple-200 mt-2">
-                Check your inbox for <strong>full company details</strong> and <strong>contact instructions</strong>
-              </p>
-            </div>
-          )}
+          <div className="mt-12 bg-green-500/20 border border-green-500/50 rounded-lg p-6 text-center">
+            <p className="text-lg">
+              ✉️ Check your inbox at <strong>{email}</strong>
+            </p>
+            <p className="text-sm text-purple-200 mt-2">
+              We've sent you <strong>detailed company profiles</strong> and <strong>contact instructions</strong>
+            </p>
+          </div>
 
           <div className="mt-12 bg-white/10 backdrop-blur-sm rounded-lg p-8 text-center">
             <h3 className="text-2xl font-bold mb-4">Want More Qualified Leads?</h3>
             <p className="text-purple-200 mb-6">
-              Share insights in a <strong>20-minute interview</strong> and get <strong>priority placement</strong> when we launch
+              I may reach out personally to learn how you win tech startup clients. 
+              Your insights help us send you <strong>better-matched leads</strong> that actually convert.
             </p>
-            <a
-              href="mailto:youremail@brokerMatch.com?subject=Broker Interview Request"
-              className="inline-block bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-lg font-bold text-lg transition"
-            >
-              Book Your Interview
-            </a>
+            <p className="text-sm text-purple-300">
+              Keep an eye on your inbox - we'd love to understand your process
+            </p>
           </div>
         </div>
       </div>
@@ -197,7 +191,7 @@ export default function BrokerSurvey() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold mb-4">
-            Get Qualified Tech Startup Leads in 15 Minutes
+            Get Qualified Tech Startup Leads in 3 Minutes
           </h1>
           <p className="text-2xl text-purple-200">
             Answer 11 questions → Get 3 matched leads <strong>instantly</strong>
@@ -211,58 +205,34 @@ export default function BrokerSurvey() {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           
-          {/* Email Delivery Option - AT THE TOP */}
+          {/* Email - Required */}
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-4">
-              How should we deliver your leads?
+              Where should we send your leads?
             </h3>
             
-            <div className="space-y-3 mb-4">
-              <label className="flex items-start gap-3 cursor-pointer p-3 rounded hover:bg-white/5 transition">
-                <input 
-                  type="radio" 
-                  name="delivery"
-                  value="screen"
-                  checked={deliveryMethod === 'screen'}
-                  onChange={(e) => setDeliveryMethod(e.target.value)}
-                  className="mt-1"
-                />
-                <span>Show on-screen only (anonymous, instant results)</span>
-              </label>
-              
-              <label className="flex items-start gap-3 cursor-pointer p-3 rounded hover:bg-white/5 transition">
-                <input 
-                  type="radio" 
-                  name="delivery"
-                  value="email"
-                  checked={deliveryMethod === 'email'}
-                  onChange={(e) => setDeliveryMethod(e.target.value)}
-                  className="mt-1"
-                />
-                <div>
-                  <div>Email me a copy with <strong>full company contact details</strong> and <strong>priority placement invitation</strong></div>
-                </div>
-              </label>
-            </div>
+            <p className="text-purple-200 mb-4">
+              We'll email you <strong>3 qualified startup leads</strong> with <strong>company details</strong> and <strong>contact pathways</strong>.
+            </p>
             
-            {deliveryMethod === 'email' && (
-              <div className="mt-4">
-                <input
-                  type="email"
-                  placeholder="your.email@brokerage.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required={deliveryMethod === 'email'}
-                  className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 placeholder-purple-400 font-medium"
-                />
-                <p className="text-sm text-purple-300 mt-2">
-                  We'll send <strong>detailed company profiles</strong>, <strong>contact pathways</strong>, and <strong>founding broker benefits</strong>
-                </p>
-              </div>
-            )}
+            <input
+              type="email"
+              placeholder="your.email@brokerage.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 placeholder-purple-400 font-medium"
+            />
+            
+            <p className="text-sm text-purple-300 mt-3">
+              We may reach out to understand how you win tech startup clients. Your insights help us send you better-matched leads.
+            </p>
           </div>
 
           <div className="h-px bg-white/20"></div>
+
+          {/* Questions Grid - 3 columns on desktop, 2 on tablet, 1 on mobile */}
+          <div className="space-y-6">
 
           {/* Question 1: Firm Name */}
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
@@ -504,6 +474,9 @@ export default function BrokerSurvey() {
               ))}
             </div>
           </div>
+
+          </div>
+          {/* End Questions Grid */}
 
           {/* Submit Button */}
           <div className="pt-6">
