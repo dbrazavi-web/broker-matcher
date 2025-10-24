@@ -10,13 +10,13 @@ export default function Home() {
             href="/surveys/employer" 
             className="block bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-8 rounded-lg transition text-xl"
           >
-            I'm an Employer →
+            For Employers →
           </a>
           <a 
             href="/surveys/broker" 
             className="block bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg transition text-xl"
           >
-            I'm a Broker →
+            For Brokers →
           </a>
         </div>
       </div>
