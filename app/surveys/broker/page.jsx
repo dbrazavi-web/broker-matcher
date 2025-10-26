@@ -24,6 +24,7 @@ export default function BrokerSurvey() {
     idealClient: '',
   });
 
+  const [requestedIntros, setRequestedIntros] = useState(new Set());
   const [submitted, setSubmitted] = useState(false);
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -153,8 +154,8 @@ export default function BrokerSurvey() {
                 </div>
 
                 <div className="mt-6">
-                  <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition">
-                    Request Introduction
+                  <button onClick={() => handleRequestIntro(lead)} disabled={requestedIntros.has(lead.id)} className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold transition disabled:cursor-not-allowed">
+                    {requestedIntros.has(lead.id) ? '✓ Request Sent' : 'Request Introduction'}
                   </button>
                 </div>
               </div>
