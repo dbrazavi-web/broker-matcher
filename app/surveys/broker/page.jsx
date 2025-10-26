@@ -25,6 +25,8 @@ export default function BrokerSurvey() {
   });
 
   const [requestedIntros, setRequestedIntros] = useState(new Set());
+  const [requestedIntros, setRequestedIntros] = useState(new Set());
+  const [requestedIntros, setRequestedIntros] = useState(new Set());
   const [submitted, setSubmitted] = useState(false);
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -41,6 +43,27 @@ export default function BrokerSurvey() {
         ? prev[name].filter(item => item !== value)
         : [...prev[name], value]
     }));
+  };
+
+  const handleRequestIntro = async (lead) => {
+    try {
+      const { error } = await supabase
+        .from("intro_requests")
+        .insert([{
+          broker_email: email,
+          broker_name: formData.contactName,
+          lead_company: lead.company_name,
+          lead_details: lead
+        }]);
+      
+      if (error) throw error;
+      
+      setRequestedIntros(prev => new Set([...prev, lead.id]));
+      alert("Request sent! We will connect you with this employer soon.");
+    } catch (error) {
+      console.error("Error requesting intro:", error);
+      alert("Error sending request. Please try again.");
+    }
   };
 
   const handleSubmit = async (e) => {
