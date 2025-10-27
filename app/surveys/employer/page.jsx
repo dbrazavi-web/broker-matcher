@@ -259,7 +259,7 @@ export default function EmployerSurvey() {
             <label className="block text-lg font-semibold mb-3">
               2. How many employees do you have?
             </label>
-            <select
+            <select required
               name="companySize"
               value={formData.companySize}
               onChange={handleInputChange}
@@ -280,7 +280,7 @@ export default function EmployerSurvey() {
             <label className="block text-lg font-semibold mb-3">
               3. Where is your company headquartered?
             </label>
-            <select
+            <select required
               name="location"
               value={formData.location}
               onChange={handleInputChange}
@@ -301,7 +301,7 @@ export default function EmployerSurvey() {
             <label className="block text-lg font-semibold mb-3">
               4. What industry are you in?
             </label>
-            <select
+            <select required
               name="industry"
               value={formData.industry}
               onChange={handleInputChange}
@@ -322,7 +322,7 @@ export default function EmployerSurvey() {
             <label className="block text-lg font-semibold mb-3">
               5. Do you currently have a benefits broker?
             </label>
-            <select
+            <select required
               name="currentBroker"
               value={formData.currentBroker}
               onChange={handleInputChange}
@@ -342,7 +342,7 @@ export default function EmployerSurvey() {
               <label className="block text-lg font-semibold mb-3">
                 6. How long have you worked with your current broker?
               </label>
-              <select
+              <select required
                 name="yearsWithBroker"
                 value={formData.yearsWithBroker}
                 onChange={handleInputChange}
@@ -362,7 +362,7 @@ export default function EmployerSurvey() {
             <label className="block text-lg font-semibold mb-3">
               7. Are you considering switching brokers or finding one for the first time?
             </label>
-            <select
+            <select required
               name="switchingConsideration"
               value={formData.switchingConsideration}
               onChange={handleInputChange}
@@ -402,7 +402,7 @@ export default function EmployerSurvey() {
             <label className="block text-lg font-semibold mb-3">
               9. When you last searched for a broker, how many did you evaluate?
             </label>
-            <select
+            <select required
               name="brokersEvaluated"
               value={formData.brokersEvaluated}
               onChange={handleInputChange}

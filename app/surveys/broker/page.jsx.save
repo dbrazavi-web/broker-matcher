@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react';
+çC§√çimport { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export default function BrokerSurvey() {
@@ -24,6 +24,8 @@ export default function BrokerSurvey() {
     idealClient: '',
   });
 
+  const [requestedIntros, setRequestedIntros] = useState(new Set());
+  const [requestedIntros, setRequestedIntros] = useState(new Set());
   const [requestedIntros, setRequestedIntros] = useState(new Set());
   const [submitted, setSubmitted] = useState(false);
   const [matches, setMatches] = useState([]);
@@ -50,7 +52,8 @@ export default function BrokerSurvey() {
         .insert([{
           broker_email: email,
           broker_name: formData.contactName,
-          employer_name: lead.company_name
+          lead_company: lead.company_name,
+          lead_details: lead
         }]);
       
       if (error) throw error;
