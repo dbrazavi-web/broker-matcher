@@ -264,7 +264,6 @@ export default function EmployerSurvey() {
               value={formData.companySize}
               onChange={handleInputChange}
               required
-              className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
               <option value="">Select size...</option>
               <option value="1-10">1-10 employees</option>
