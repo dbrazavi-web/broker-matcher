@@ -247,7 +247,7 @@ export default function EmployerSurvey() {
               type="text"
               name="companyName"
               value={formData.companyName}
-              onChange={handleInputChange}
+              onChange={handleInputChange} required
               required
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 placeholder-purple-400 font-medium"
               placeholder="Acme Inc."
@@ -259,10 +259,10 @@ export default function EmployerSurvey() {
             <label className="block text-lg font-semibold mb-3">
               2. How many employees do you have?
             </label>
-            <select required
+            <select
               name="companySize"
               value={formData.companySize}
-              onChange={handleInputChange}
+              onChange={handleInputChange} required
               required
             >
               <option value="">Select size...</option>
@@ -279,10 +279,10 @@ export default function EmployerSurvey() {
             <label className="block text-lg font-semibold mb-3">
               3. Where is your company headquartered?
             </label>
-            <select required
+            <select
               name="location"
               value={formData.location}
-              onChange={handleInputChange}
+              onChange={handleInputChange} required
               required
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
@@ -300,10 +300,10 @@ export default function EmployerSurvey() {
             <label className="block text-lg font-semibold mb-3">
               4. What industry are you in?
             </label>
-            <select required
+            <select
               name="industry"
               value={formData.industry}
-              onChange={handleInputChange}
+              onChange={handleInputChange} required
               required
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
@@ -321,10 +321,10 @@ export default function EmployerSurvey() {
             <label className="block text-lg font-semibold mb-3">
               5. Do you currently have a benefits broker?
             </label>
-            <select required
+            <select
               name="currentBroker"
               value={formData.currentBroker}
-              onChange={handleInputChange}
+              onChange={handleInputChange} required
               required
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
@@ -341,10 +341,10 @@ export default function EmployerSurvey() {
               <label className="block text-lg font-semibold mb-3">
                 6. How long have you worked with your current broker?
               </label>
-              <select required
+              <select
                 name="yearsWithBroker"
                 value={formData.yearsWithBroker}
-                onChange={handleInputChange}
+                onChange={handleInputChange} required
                 className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
               >
                 <option value="">Select...</option>
@@ -361,10 +361,10 @@ export default function EmployerSurvey() {
             <label className="block text-lg font-semibold mb-3">
               7. Are you considering switching brokers or finding one for the first time?
             </label>
-            <select required
+            <select
               name="switchingConsideration"
               value={formData.switchingConsideration}
-              onChange={handleInputChange}
+              onChange={handleInputChange} required
               required
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
@@ -401,10 +401,10 @@ export default function EmployerSurvey() {
             <label className="block text-lg font-semibold mb-3">
               9. When you last searched for a broker, how many did you evaluate?
             </label>
-            <select required
+            <select
               name="brokersEvaluated"
               value={formData.brokersEvaluated}
-              onChange={handleInputChange}
+              onChange={handleInputChange} required
               required
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
