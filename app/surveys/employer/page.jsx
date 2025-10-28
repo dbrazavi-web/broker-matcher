@@ -248,7 +248,6 @@ export default function EmployerSurvey() {
               name="companyName"
               value={formData.companyName}
               onChange={handleInputChange} required
-              required
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 placeholder-purple-400 font-medium"
               placeholder="Acme Inc."
             />
@@ -263,7 +262,6 @@ export default function EmployerSurvey() {
               name="companySize"
               value={formData.companySize}
               onChange={handleInputChange} required
-              required
             >
               <option value="">Select size...</option>
               <option value="1-10">1-10 employees</option>
@@ -283,7 +281,6 @@ export default function EmployerSurvey() {
               name="location"
               value={formData.location}
               onChange={handleInputChange} required
-              required
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
               <option value="">Select location...</option>
@@ -304,7 +301,6 @@ export default function EmployerSurvey() {
               name="industry"
               value={formData.industry}
               onChange={handleInputChange} required
-              required
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
               <option value="">Select industry...</option>
@@ -325,7 +321,6 @@ export default function EmployerSurvey() {
               name="currentBroker"
               value={formData.currentBroker}
               onChange={handleInputChange} required
-              required
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
               <option value="">Select...</option>
@@ -365,7 +360,6 @@ export default function EmployerSurvey() {
               name="switchingConsideration"
               value={formData.switchingConsideration}
               onChange={handleInputChange} required
-              required
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
               <option value="">Select...</option>
@@ -405,7 +399,6 @@ export default function EmployerSurvey() {
               name="brokersEvaluated"
               value={formData.brokersEvaluated}
               onChange={handleInputChange} required
-              required
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
               <option value="">Select...</option>
