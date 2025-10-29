@@ -253,7 +253,7 @@ export default function BrokerSurvey() {
 
           <div className="h-px bg-white/20"></div>
 
-          {/* Questions Grid - 3 columns on desktop, 2 on tablet, 1 on mobile */}
+          {/* Questions Grid */}
           <div className="space-y-6">
 
           {/* Question 1: Firm Name */}
@@ -288,10 +288,10 @@ export default function BrokerSurvey() {
             />
           </div>
 
-          {/* Question 3: Location */}
+          {/* Question 3: Location - UPDATED to match employer survey */}
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
             <label className="block text-lg font-semibold mb-3">
-              3. Where is your firm located?
+              3. Where is your firm headquartered?
             </label>
             <select
               name="location"
@@ -301,21 +301,48 @@ export default function BrokerSurvey() {
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
               <option value="">Select location...</option>
-              <option value="San Francisco">San Francisco</option>
-              <option value="San Diego">San Diego</option>
-              <option value="New York">New York</option>
-              <option value="Boston">Boston</option>
-              <option value="Other">Other</option>
+              <optgroup label="California">
+                <option value="San Francisco">San Francisco, CA</option>
+                <option value="San Diego">San Diego, CA</option>
+                <option value="Los Angeles">Los Angeles, CA</option>
+              </optgroup>
+              <optgroup label="New York">
+                <option value="New York">New York, NY</option>
+              </optgroup>
+              <optgroup label="Illinois">
+                <option value="Chicago">Chicago, IL</option>
+              </optgroup>
+              <optgroup label="Texas">
+                <option value="Austin">Austin, TX</option>
+                <option value="Houston">Houston, TX</option>
+                <option value="Dallas">Dallas, TX</option>
+              </optgroup>
+              <optgroup label="Washington">
+                <option value="Seattle">Seattle, WA</option>
+              </optgroup>
+              <optgroup label="Other">
+                <option value="Boston">Boston, MA</option>
+                <option value="Other">Other</option>
+              </optgroup>
             </select>
           </div>
 
-          {/* Question 4: Service Area */}
+          {/* Question 4: Service Area - UPDATED to match the 5 states */}
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
             <label className="block text-lg font-semibold mb-3">
-              4. What regions do you serve? (Select all that apply)
+              4. What regions/states do you serve? (Select all that apply)
             </label>
             <div className="space-y-2">
-              {['San Francisco Bay Area', 'Southern California', 'New York/NYC', 'Boston/New England', 'National', 'Other'].map(area => (
+              {[
+                'California (all regions)',
+                'New York (all regions)',
+                'Texas (all regions)',
+                'Washington (all regions)',
+                'Illinois (all regions)',
+                'Massachusetts/New England',
+                'National (all 50 states)',
+                'Other specific states'
+              ].map(area => (
                 <label key={area} className="flex items-center gap-3 p-2 rounded hover:bg-white/5 cursor-pointer">
                   <input
                     type="checkbox"
