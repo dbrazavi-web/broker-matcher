@@ -104,6 +104,7 @@ export default function EmployerSurvey() {
       const companySize = getCompanySizeNumber(formData.companySize);
 
       let brokersData = [];
+      const seenBrokerIds = new Set();
 
       if (userState) {
         // Priority 1: State match + company size + startup focus
@@ -117,7 +118,14 @@ export default function EmployerSurvey() {
           .gte('company_size_max', companySize)
           .limit(3);
 
-        brokersData = priorityBrokers || [];
+        if (priorityBrokers) {
+          priorityBrokers.forEach(broker => {
+            if (!seenBrokerIds.has(broker.id)) {
+              brokersData.push(broker);
+              seenBrokerIds.add(broker.id);
+            }
+          });
+        }
 
         // Priority 2: If <3 matches, drop startup filter
         if (brokersData.length < 3) {
@@ -128,9 +136,16 @@ export default function EmployerSurvey() {
             .eq('is_active', true)
             .lte('company_size_min', companySize)
             .gte('company_size_max', companySize)
-            .limit(3 - brokersData.length);
+            .limit(5);
 
-          brokersData = [...brokersData, ...(backupBrokers || [])];
+          if (backupBrokers) {
+            backupBrokers.forEach(broker => {
+              if (!seenBrokerIds.has(broker.id) && brokersData.length < 3) {
+                brokersData.push(broker);
+                seenBrokerIds.add(broker.id);
+              }
+            });
+          }
         }
 
         // Priority 3: If still <3, just match by state
@@ -140,9 +155,16 @@ export default function EmployerSurvey() {
             .select('*')
             .eq('state', userState)
             .eq('is_active', true)
-            .limit(3 - brokersData.length);
+            .limit(5);
 
-          brokersData = [...brokersData, ...(stateBrokers || [])];
+          if (stateBrokers) {
+            stateBrokers.forEach(broker => {
+              if (!seenBrokerIds.has(broker.id) && brokersData.length < 3) {
+                brokersData.push(broker);
+                seenBrokerIds.add(broker.id);
+              }
+            });
+          }
         }
       } else {
         // If "Other" location, get any startup-focused brokers
