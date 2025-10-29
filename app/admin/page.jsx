@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingEmployer, setEditingEmployer] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -55,6 +56,35 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error adding prospect:', error);
       alert('Error adding prospect');
+    }
+  };
+
+  const updateProspect = async (id, data) => {
+    try {
+      await supabase
+        .from('employers')
+        .update(data)
+        .eq('id', id);
+      
+      fetchData();
+      setEditingEmployer(null);
+      alert('Updated!');
+    } catch (error) {
+      console.error('Error updating:', error);
+      alert('Error updating');
+    }
+  };
+
+  const deleteProspect = async (id, companyName) => {
+    if (!confirm(`Delete ${companyName}? This cannot be undone.`)) return;
+    
+    try {
+      await supabase.from('employers').delete().eq('id', id);
+      fetchData();
+      alert('Deleted!');
+    } catch (error) {
+      console.error('Error deleting:', error);
+      alert('Error deleting');
     }
   };
 
@@ -196,6 +226,18 @@ export default function AdminDashboard() {
                             <option value="medium">⚡ Medium</option>
                             <option value="low">💤 Low</option>
                           </select>
+                          <button
+                            onClick={() => setEditingEmployer(emp)}
+                            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs"
+                          >
+                            ✏️ Edit
+                          </button>
+                          <button
+                            onClick={() => deleteProspect(emp.id, emp.company_name)}
+                            className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs"
+                          >
+                            🗑️
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -231,18 +273,32 @@ export default function AdminDashboard() {
                     <h3 className="text-xl font-bold">{emp.company_name}</h3>
                     <p className="text-sm text-gray-400">{emp.email}</p>
                   </div>
-                  <select
-                    value={emp.status || 'new'}
-                    onChange={(e) => updateField(emp.id, 'status', e.target.value)}
-                    className="px-3 py-1 bg-gray-700 rounded"
-                  >
-                    <option value="outreach">Outreach</option>
-                    <option value="new">Survey Done</option>
-                    <option value="matched">Matched</option>
-                    <option value="intro_sent">Intro Sent</option>
-                    <option value="meeting">Meeting</option>
-                    <option value="closed">Closed</option>
-                  </select>
+                  <div className="flex gap-2">
+                    <select
+                      value={emp.status || 'new'}
+                      onChange={(e) => updateField(emp.id, 'status', e.target.value)}
+                      className="px-3 py-1 bg-gray-700 rounded"
+                    >
+                      <option value="outreach">Outreach</option>
+                      <option value="new">Survey Done</option>
+                      <option value="matched">Matched</option>
+                      <option value="intro_sent">Intro Sent</option>
+                      <option value="meeting">Meeting</option>
+                      <option value="closed">Closed</option>
+                    </select>
+                    <button
+                      onClick={() => setEditingEmployer(emp)}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => deleteProspect(emp.id, emp.company_name)}
+                      className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-sm mb-4">
@@ -285,7 +341,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Matches Tab - Same as before */}
+        {/* Matches Tab */}
         {activeTab === 'matches' && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold mb-4">🎯 Smart Match Suggestions</h2>
@@ -325,7 +381,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Brokers Tab - Same as before */}
+        {/* Brokers Tab */}
         {activeTab === 'brokers' && (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold mb-4">Broker Responses ({brokers.length})</h2>
@@ -355,40 +411,111 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Add Prospect Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-gray-800 rounded-lg p-8 max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4">Add Manual Prospect</h2>
+      {/* Add/Edit Modal */}
+      {(showAddModal || editingEmployer) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 rounded-lg p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-4">
+              {editingEmployer ? 'Edit Prospect' : 'Add Manual Prospect'}
+            </h2>
             <form onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.target);
-              addManualProspect({
-                companyName: formData.get('companyName'),
+              const data = {
+                company_name: formData.get('companyName'),
                 email: formData.get('email'),
                 location: formData.get('location'),
-                companySize: formData.get('companySize'),
+                company_size: formData.get('companySize'),
                 industry: formData.get('industry'),
-                channel: formData.get('channel'),
-                notes: formData.get('notes')
-              });
+                outreach_channel: formData.get('channel'),
+                outreach_notes: formData.get('notes')
+              };
+              
+              if (editingEmployer) {
+                updateProspect(editingEmployer.id, data);
+              } else {
+                addManualProspect({
+                  companyName: data.company_name,
+                  email: data.email,
+                  location: data.location,
+                  companySize: data.company_size,
+                  industry: data.industry,
+                  channel: data.outreach_channel,
+                  notes: data.outreach_notes
+                });
+              }
             }} className="space-y-4">
-              <input name="companyName" placeholder="Company Name" required className="w-full px-4 py-2 bg-gray-700 rounded" />
-              <input name="email" type="email" placeholder="Email" required className="w-full px-4 py-2 bg-gray-700 rounded" />
-              <input name="location" placeholder="Location" required className="w-full px-4 py-2 bg-gray-700 rounded" />
-              <input name="companySize" placeholder="Company Size (e.g. 11-50)" required className="w-full px-4 py-2 bg-gray-700 rounded" />
-              <input name="industry" placeholder="Industry" required className="w-full px-4 py-2 bg-gray-700 rounded" />
-              <select name="channel" required className="w-full px-4 py-2 bg-gray-700 rounded">
+              <input 
+                name="companyName" 
+                placeholder="Company Name" 
+                defaultValue={editingEmployer?.company_name}
+                required 
+                className="w-full px-4 py-2 bg-gray-700 rounded" 
+              />
+              <input 
+                name="email" 
+                type="email" 
+                placeholder="Email" 
+                defaultValue={editingEmployer?.email}
+                required 
+                className="w-full px-4 py-2 bg-gray-700 rounded" 
+              />
+              <input 
+                name="location" 
+                placeholder="Location (e.g. San Francisco)" 
+                defaultValue={editingEmployer?.location}
+                required 
+                className="w-full px-4 py-2 bg-gray-700 rounded" 
+              />
+              <input 
+                name="companySize" 
+                placeholder="Company Size (e.g. 11-50)" 
+                defaultValue={editingEmployer?.company_size}
+                required 
+                className="w-full px-4 py-2 bg-gray-700 rounded" 
+              />
+              <input 
+                name="industry" 
+                placeholder="Industry (e.g. Technology)" 
+                defaultValue={editingEmployer?.industry}
+                required 
+                className="w-full px-4 py-2 bg-gray-700 rounded" 
+              />
+              <select 
+                name="channel" 
+                defaultValue={editingEmployer?.outreach_channel}
+                required 
+                className="w-full px-4 py-2 bg-gray-700 rounded"
+              >
                 <option value="">Select Channel...</option>
                 <option value="LinkedIn">LinkedIn</option>
                 <option value="Email">Email</option>
                 <option value="YC">YC Bookface</option>
                 <option value="Referral">Referral</option>
               </select>
-              <textarea name="notes" placeholder="Outreach notes..." className="w-full px-4 py-2 bg-gray-700 rounded h-24"></textarea>
+              <textarea 
+                name="notes" 
+                placeholder="Outreach notes..." 
+                defaultValue={editingEmployer?.outreach_notes}
+                className="w-full px-4 py-2 bg-gray-700 rounded h-24"
+              ></textarea>
               <div className="flex gap-4">
-                <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Add</button>
-                <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded">Cancel</button>
+                <button 
+                  type="submit" 
+                  className="flex-1 bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
+                >
+                  {editingEmployer ? 'Update' : 'Add'}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setEditingEmployer(null);
+                  }} 
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
               </div>
             </form>
           </div>
