@@ -1,194 +1,46 @@
 'use client';
-export const dynamic = 'force-dynamic'
-
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function EmployerSurvey() {
-  // Email (required)
-  const [email, setEmail] = useState('');
-  
-  // Form data
-  const [formData, setFormData] = useState({
-    companyName: '',
-    companySize: '',
-    location: '',
-    industry: '',
-    currentBroker: '',
-    yearsWithBroker: '',
-    switchingConsideration: '',
-    decisionMakers: [],
-    brokersEvaluated: '',
-    selectionCriteria: [],
-    painPoints: [],
-    annualPremium: '',
-  });
-
+  const supabase = createClientComponentClient();
   const [submitted, setSubmitted] = useState(false);
-  const [matches, setMatches] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckboxChange = (name, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: prev[name].includes(value)
-        ? prev[name].filter(item => item !== value)
-        : [...prev[name], value]
-    }));
-  };
-
-  // UPDATED: Map location to state abbreviation for matching
-  const getStateFromLocation = (location) => {
-    const stateMap = {
-      'San Francisco': 'CA',
-      'San Diego': 'CA',
-      'Los Angeles': 'CA',
-      'New York': 'NY',
-      'Boston': 'MA',
-      'Austin': 'TX',
-      'Houston': 'TX',
-      'Dallas': 'TX',
-      'Seattle': 'WA',
-      'Chicago': 'IL',
-      'Other': null
-    };
-    return stateMap[location] || null;
-  };
-
-  // UPDATED: Convert company size to number for matching
-  const getCompanySizeNumber = (sizeRange) => {
-    const sizeMap = {
-      '1-10': 10,
-      '11-50': 50,
-      '51-200': 200,
-      '201-500': 500,
-      '500+': 1000
-    };
-    return sizeMap[sizeRange] || 50;
-  };
+  const [formData, setFormData] = useState({
+    email: '',
+    company_name: '',
+    employee_count: '',
+    state: '',
+    industry: '',
+    current_situation: '',
+    last_interaction: '',
+    how_found_broker: '',
+    setup_process: '',
+    alternative_solution: '',
+    switched_brokers: '',
+    switch_reason: '',
+    response_time: '',
+    referred_broker: '',
+    referral_reason: '',
+    priority_question: '',
+    magic_wand: ''
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
+    
     try {
-      // Save employer submission
-      const { data: employerData, error: employerError } = await supabase
+      const { data, error } = await supabase
         .from('employers')
-        .insert([{
-          company_name: formData.companyName,
-          company_size: formData.companySize,
-          location: formData.location,
-          industry: formData.industry,
-          email: email,
-          current_broker: formData.currentBroker,
-          years_with_broker: formData.yearsWithBroker,
-          switching_consideration: formData.switchingConsideration,
-          decision_makers: formData.decisionMakers,
-          brokers_evaluated: formData.brokersEvaluated,
-          selection_criteria: formData.selectionCriteria,
-          pain_points: formData.painPoints,
-          annual_premium: formData.annualPremium,
-        }])
+        .insert([formData])
         .select();
 
-      if (employerError) throw employerError;
-
-      // UPDATED MATCHING LOGIC: Use real brokers with state and company_size
-      const userState = getStateFromLocation(formData.location);
-      const companySize = getCompanySizeNumber(formData.companySize);
-
-      let brokersData = [];
-      const seenBrokerIds = new Set();
-
-      if (userState) {
-        // Priority 1: State match + company size + startup focus
-        const { data: priorityBrokers } = await supabase
-          .from('brokers')
-          .select('*')
-          .eq('state', userState)
-          .eq('is_active', true)
-          .eq('specializes_in_startups', true)
-          .lte('company_size_min', companySize)
-          .gte('company_size_max', companySize)
-          .limit(3);
-
-        if (priorityBrokers) {
-          priorityBrokers.forEach(broker => {
-            if (!seenBrokerIds.has(broker.id)) {
-              brokersData.push(broker);
-              seenBrokerIds.add(broker.id);
-            }
-          });
-        }
-
-        // Priority 2: If <3 matches, drop startup filter
-        if (brokersData.length < 3) {
-          const { data: backupBrokers } = await supabase
-            .from('brokers')
-            .select('*')
-            .eq('state', userState)
-            .eq('is_active', true)
-            .lte('company_size_min', companySize)
-            .gte('company_size_max', companySize)
-            .limit(5);
-
-          if (backupBrokers) {
-            backupBrokers.forEach(broker => {
-              if (!seenBrokerIds.has(broker.id) && brokersData.length < 3) {
-                brokersData.push(broker);
-                seenBrokerIds.add(broker.id);
-              }
-            });
-          }
-        }
-
-        // Priority 3: If still <3, just match by state
-        if (brokersData.length < 3) {
-          const { data: stateBrokers } = await supabase
-            .from('brokers')
-            .select('*')
-            .eq('state', userState)
-            .eq('is_active', true)
-            .limit(5);
-
-          if (stateBrokers) {
-            stateBrokers.forEach(broker => {
-              if (!seenBrokerIds.has(broker.id) && brokersData.length < 3) {
-                brokersData.push(broker);
-                seenBrokerIds.add(broker.id);
-              }
-            });
-          }
-        }
-      } else {
-        // If "Other" location, get any startup-focused brokers
-        const { data: generalBrokers } = await supabase
-          .from('brokers')
-          .select('*')
-          .eq('is_active', true)
-          .eq('specializes_in_startups', true)
-          .limit(3);
-
-        brokersData = generalBrokers || [];
-      }
-
-      setMatches(brokersData);
-
-      // TODO: Send matches via email
-      console.log('Send email to:', email, 'with matches:', brokersData);
+      if (error) throw error;
 
       setSubmitted(true);
+      window.scrollTo(0, 0);
     } catch (error) {
       console.error('Error submitting survey:', error);
       alert('Error submitting survey. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -196,79 +48,30 @@ export default function EmployerSurvey() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 text-white py-12 px-6">
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4">🎉 Your Broker Matches Are Ready!</h1>
-            <p className="text-xl text-purple-200">
-              Here are {matches.length} broker{matches.length !== 1 ? 's' : ''} who specialize in companies like yours
-            </p>
-          </div>
-
-          <div className="space-y-6">
-            {matches.length > 0 ? (
-              matches.map((broker, index) => (
-                <div key={broker.id} className="bg-white/10 backdrop-blur-sm rounded-lg p-8">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-2xl font-bold mb-2">
-                        {index + 1}. {broker.company_name || broker.firm_name}
-                      </h3>
-                      {broker.specializes_in_startups && (
-                        <div className="inline-block bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                          ✓ Startup Specialist
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 text-purple-100">
-                    <p><strong className="text-white">Location:</strong> {broker.location}</p>
-                    <p><strong className="text-white">Company Size Focus:</strong> {broker.company_size_min}-{broker.company_size_max} employees</p>
-                    {broker.email && (
-                      <p><strong className="text-white">Email:</strong> {broker.email}</p>
-                    )}
-                  </div>
-
-                  <div className="mt-6 pt-6 border-t border-white/20">
-                    <p className="text-sm text-purple-200">
-                      <strong className="text-white">Why this match:</strong> {broker.company_name || broker.firm_name} specializes in companies with {broker.company_size_min}-{broker.company_size_max} employees in {broker.state}.
-                      {broker.specializes_in_startups && ' They have deep expertise working with startups and high-growth companies.'}
-                    </p>
-                  </div>
-
-                  <div className="mt-6">
-                    <button
-                      onClick={() => alert('Introduction request sent! We\'ll connect you within 24 hours.')}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition"
-                    >
-                      Request Introduction
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 text-center">
-                <p className="text-xl">We're expanding our broker network in your area. We'll email you matches within 24 hours!</p>
-              </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 text-center">
+            <h2 className="text-3xl font-bold mb-4">Thank you! 🙏</h2>
+            <p className="text-xl mb-6">Your insights are incredibly valuable.</p>
+            
+            {formData.email && (
+              <p className="mb-6">
+                We'll send your 3 matched broker recommendations to <strong>{formData.email}</strong> within 24 hours.
+              </p>
             )}
-          </div>
-
-          <div className="mt-12 bg-green-500/20 border border-green-500/50 rounded-lg p-6 text-center">
-            <p className="text-lg">
-              ✉️ Check your inbox at <strong>{email}</strong>
-            </p>
-            <p className="text-sm text-purple-200 mt-2">
-              We've sent you <strong>detailed broker profiles</strong> with <strong>full contact information</strong> and <strong>next steps</strong>
-            </p>
-          </div>
-
-          <div className="mt-12 bg-white/10 backdrop-blur-sm rounded-lg p-8 text-center">
-            <h3 className="text-2xl font-bold mb-4">Want to Help Shape This?</h3>
-            <p className="text-purple-200 mb-6">
-              I may reach out personally to learn more about your broker search experience. 
-              Your insights help us build <strong>better matching</strong> for tech startups like yours.
-            </p>
+            
+            <div className="bg-purple-800/50 rounded-lg p-6 mb-6">
+              <p className="text-lg font-semibold mb-2">Want to discuss your benefits challenges?</p>
+              <a 
+                href="https://calendly.com/dbrazavi/15-minute-discovery-meeting"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-white text-purple-900 px-6 py-3 rounded-lg font-semibold hover:bg-purple-100 transition"
+              >
+                Book a 15-Minute Call
+              </a>
+            </div>
+            
             <p className="text-sm text-purple-300">
-              Keep an eye on your inbox - we'd love to hear your story
+              Your responses help us build better matching for the entire startup community.
             </p>
           </div>
         </div>
@@ -278,308 +81,355 @@ export default function EmployerSurvey() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 text-white py-12 px-6">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         
-        {/* Header */}
+        {/* Updated Intro Section */}
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-4">
-            3 Minutes to Your Perfect Benefits Broker Match
+          <h1 className="text-4xl font-bold mb-4">
+            Help Shape Better Benefits Broker Matching
           </h1>
-          <p className="text-2xl text-purple-200">
-            Answer 10 questions → Get 3 personalized matches <strong>instantly</strong>
+          <p className="text-xl text-purple-200 mb-4">
+            Share your experience → Get 3 vetted broker recommendations
           </p>
-          <p className="text-xl text-purple-300 mt-2">
-            Skip 3 months of research and $2,500 in consultant fees
+          <p className="text-lg text-purple-300">
+            3 minutes | No sales pitch, just research
           </p>
         </div>
 
-        <div className="h-px bg-white/20 my-8"></div>
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 mb-8">
+          <p className="text-center text-purple-100">
+            <strong>I'm D, former Intuit financial analyst</strong>, building a platform to connect employers with vetted benefits brokers. This survey helps me understand what's broken in how companies find brokers today.
+          </p>
+          <p className="text-center text-purple-200 mt-3 text-sm">
+            Want to discuss your situation directly?{' '}
+            <a 
+              href="https://calendly.com/dbrazavi/15-minute-discovery-meeting" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-white"
+            >
+              Book a 15-min call here
+            </a>
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
           
-          {/* Email - Required */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-            <h3 className="text-xl font-semibold mb-4">
-              Where should we send your matches?
-            </h3>
-            
-            <p className="text-purple-200 mb-4">
-              We'll email you <strong>3 broker matches</strong> with <strong>full contact details</strong> and <strong>why each broker fits your company</strong>.
+          {/* Updated Email Question */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-3">
+              Want your matched broker recommendations via email?
+            </label>
+            <p className="text-sm text-gray-600 mb-4">
+              We'll send you 3 broker profiles with full contact info and why they're a good fit for your company size and industry. Or you can view recommendations on-screen at the end (anonymous).
             </p>
-            
+            <p className="text-sm text-gray-500 mb-4">
+              Interested in discussing your benefits challenges?{' '}
+              <a 
+                href="https://calendly.com/dbrazavi/15-minute-discovery-meeting"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-purple-600 underline hover:text-purple-800"
+              >
+                calendly.com/dbrazavi/15-minute-discovery-meeting
+              </a>
+            </p>
             <input
               type="email"
-              placeholder="your.email@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 placeholder-purple-400 font-medium"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+              placeholder="your@email.com (optional)"
             />
-            
-            <p className="text-sm text-purple-300 mt-3">
-              We may personally reach out to learn more about your broker search experience. Your insights help us improve matching for everyone.
+            <p className="text-xs text-gray-500 mt-2">
+              Optional - skip if you prefer anonymous on-screen results
             </p>
           </div>
 
-          <div className="h-px bg-white/20"></div>
-
-          {/* Questions Grid */}
-          <div className="space-y-6">
-
-          {/* Question 1: Company Name */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-            <label className="block text-lg font-semibold mb-3">
-              1. What's your company name?
+          {/* Company Name */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-2">
+              Company Name
             </label>
             <input
               type="text"
-              name="companyName"
-              value={formData.companyName}
-              onChange={handleInputChange}
+              value={formData.company_name}
+              onChange={(e) => setFormData({...formData, company_name: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+              placeholder="Your company name"
               required
-              className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 placeholder-purple-400 font-medium"
-              placeholder="Acme Inc."
             />
           </div>
 
-          {/* Question 2: Company Size */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-            <label className="block text-lg font-semibold mb-3">
-              2. How many employees do you have?
+          {/* Employee Count */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-2">
+              How many employees do you have?
             </label>
             <select
-              name="companySize"
-              value={formData.companySize}
-              onChange={handleInputChange}
+              value={formData.employee_count}
+              onChange={(e) => setFormData({...formData, employee_count: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
               required
-              className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
-              <option value="">Select size...</option>
-              <option value="1-10">1-10 employees</option>
-              <option value="11-50">11-50 employees</option>
-              <option value="51-200">51-200 employees</option>
-              <option value="201-500">201-500 employees</option>
-              <option value="500+">500+ employees</option>
+              <option value="">Select range</option>
+              <option value="1-10">1-10</option>
+              <option value="11-25">11-25</option>
+              <option value="26-50">26-50</option>
+              <option value="51-100">51-100</option>
+              <option value="101-200">101-200</option>
+              <option value="200+">200+</option>
             </select>
           </div>
 
-          {/* Question 3: Location - UPDATED with more states */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-            <label className="block text-lg font-semibold mb-3">
-              3. Where is your company headquartered?
+          {/* State */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-2">
+              What state is your company based in?
+            </label>
+            <input
+              type="text"
+              value={formData.state}
+              onChange={(e) => setFormData({...formData, state: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+              placeholder="CA, NY, TX, etc."
+              required
+            />
+          </div>
+
+          {/* Industry */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-2">
+              What industry are you in?
             </label>
             <select
-              name="location"
-              value={formData.location}
-              onChange={handleInputChange}
+              value={formData.industry}
+              onChange={(e) => setFormData({...formData, industry: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
               required
-              className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
-              <option value="">Select location...</option>
-              <option value="San Francisco">San Francisco, CA</option>
-              <option value="San Diego">San Diego, CA</option>
-              <option value="Los Angeles">Los Angeles, CA</option>
-              <option value="New York">New York, NY</option>
-              <option value="Chicago">Chicago, IL</option>
-              <option value="Austin">Austin, TX</option>
-              <option value="Houston">Houston, TX</option>
-              <option value="Dallas">Dallas, TX</option>
-              <option value="Seattle">Seattle, WA</option>
-              <option value="Boston">Boston, MA</option>
+              <option value="">Select industry</option>
+              <option value="SaaS/Software">SaaS/Software</option>
+              <option value="Fintech">Fintech</option>
+              <option value="Healthcare/Biotech">Healthcare/Biotech</option>
+              <option value="E-commerce/Marketplace">E-commerce/Marketplace</option>
+              <option value="Consumer Tech">Consumer Tech</option>
+              <option value="Enterprise Software">Enterprise Software</option>
+              <option value="Professional Services">Professional Services</option>
+              <option value="Manufacturing">Manufacturing</option>
               <option value="Other">Other</option>
             </select>
           </div>
 
-          {/* Questions 4-11: Keep all existing questions unchanged */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-            <label className="block text-lg font-semibold mb-3">
-              4. What industry are you in?
+          {/* Current Situation */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-2">
+              What's your current benefits situation?
             </label>
             <select
-              name="industry"
-              value={formData.industry}
-              onChange={handleInputChange}
+              value={formData.current_situation}
+              onChange={(e) => setFormData({...formData, current_situation: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
               required
-              className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
             >
-              <option value="">Select industry...</option>
-              <option value="Technology/SaaS">Technology/SaaS</option>
-              <option value="Fintech">Fintech</option>
-              <option value="Healthcare Tech">Healthcare Tech</option>
-              <option value="E-commerce">E-commerce</option>
-              <option value="Other Tech">Other Tech</option>
+              <option value="">Select situation</option>
+              <option value="no_benefits">We don't offer benefits yet</option>
+              <option value="with_broker">We work with a benefits broker</option>
+              <option value="manage_ourselves">We manage it ourselves (no broker)</option>
+              <option value="peo">We use a PEO (Justworks, Rippling, etc.)</option>
+              <option value="other">Other</option>
             </select>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-            <label className="block text-lg font-semibold mb-3">
-              5. Do you currently have a benefits broker?
+          {/* Last Interaction - Mom Test Question */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-2">
+              Tell me about the last time you had to interact with your benefits broker (or search for one). What happened?
+            </label>
+            <textarea
+              value={formData.last_interaction}
+              onChange={(e) => setFormData({...formData, last_interaction: e.target.value})}
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+              placeholder="Tell your story..."
+            />
+          </div>
+
+          {/* How Found Broker */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-2">
+              How did you find your current broker (or last broker you worked with)?
             </label>
             <select
-              name="currentBroker"
-              value={formData.currentBroker}
-              onChange={handleInputChange}
-              required
-              className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
+              value={formData.how_found_broker}
+              onChange={(e) => setFormData({...formData, how_found_broker: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
             >
-              <option value="">Select...</option>
-              <option value="Yes">Yes, we have a broker</option>
-              <option value="No">No, we don't have a broker</option>
-              <option value="We manage it ourselves">We manage benefits ourselves</option>
+              <option value="">Select option</option>
+              <option value="referral">Referral from friend/colleague/investor</option>
+              <option value="broker_outreach">Broker reached out to us</option>
+              <option value="google">Found them through Google search</option>
+              <option value="peo">Came with our PEO</option>
+              <option value="inherited">Inherited from previous role</option>
+              <option value="still_searching">Still haven't found one</option>
+              <option value="no_broker">N/A - don't use a broker</option>
+              <option value="other">Other</option>
             </select>
           </div>
 
-          {formData.currentBroker === 'Yes' && (
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-              <label className="block text-lg font-semibold mb-3">
-                6. How long have you worked with your current broker?
-              </label>
-              <select
-                name="yearsWithBroker"
-                value={formData.yearsWithBroker}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
-              >
-                <option value="">Select...</option>
-                <option value="Less than 1 year">Less than 1 year</option>
-                <option value="1-2 years">1-2 years</option>
-                <option value="3-5 years">3-5 years</option>
-                <option value="5+ years">5+ years</option>
-              </select>
-            </div>
-          )}
-
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-            <label className="block text-lg font-semibold mb-3">
-              7. Are you considering switching brokers or finding one for the first time?
+          {/* Setup Process */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-2">
+              If you've set up benefits before, walk me through what that process looked like. How long did it take? What were the steps?
             </label>
-            <select
-              name="switchingConsideration"
-              value={formData.switchingConsideration}
-              onChange={handleInputChange}
-              required
-              className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
-            >
-              <option value="">Select...</option>
-              <option value="Actively looking">Actively looking now</option>
-              <option value="Exploring options">Exploring options (next 6 months)</option>
-              <option value="Not currently">Not currently, but open to better options</option>
-              <option value="First time">Looking for our first broker</option>
-            </select>
+            <textarea
+              value={formData.setup_process}
+              onChange={(e) => setFormData({...formData, setup_process: e.target.value})}
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+              placeholder="Describe the process..."
+            />
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-            <label className="block text-lg font-semibold mb-3">
-              8. Who's involved in choosing your benefits broker? (Select all that apply)
+          {/* Alternative Solution */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-2">
+              Before you had a broker (or if you don't have one now), how did you handle benefits? What did you do instead?
             </label>
-            <div className="space-y-2">
-              {['CEO/Founder', 'CFO', 'HR/People Ops', 'Operations', 'Benefits Committee', 'Other'].map(role => (
-                <label key={role} className="flex items-center gap-3 p-2 rounded hover:bg-white/5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.decisionMakers.includes(role)}
-                    onChange={() => handleCheckboxChange('decisionMakers', role)}
-                    className="w-5 h-5"
-                  />
-                  <span>{role}</span>
+            <textarea
+              value={formData.alternative_solution}
+              onChange={(e) => setFormData({...formData, alternative_solution: e.target.value})}
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+              placeholder="What was your alternative?"
+            />
+          </div>
+
+          {/* Switched Brokers */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-3">
+              Have you ever switched benefits brokers?
+            </label>
+            <select
+              value={formData.switched_brokers}
+              onChange={(e) => setFormData({...formData, switched_brokers: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 mb-4"
+            >
+              <option value="">Select option</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+              <option value="na">N/A - never had a broker</option>
+            </select>
+
+            {formData.switched_brokers === 'yes' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  What triggered the switch?
                 </label>
-              ))}
-            </div>
+                <textarea
+                  value={formData.switch_reason}
+                  onChange={(e) => setFormData({...formData, switch_reason: e.target.value})}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  placeholder="What made you switch?"
+                />
+              </div>
+            )}
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-            <label className="block text-lg font-semibold mb-3">
-              9. When you last searched for a broker, how many did you evaluate?
+          {/* Response Time */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-2">
+              Think about the last 2-3 times you reached out to your broker. How long did it typically take them to respond?
             </label>
             <select
-              name="brokersEvaluated"
-              value={formData.brokersEvaluated}
-              onChange={handleInputChange}
-              required
-              className="w-full px-4 py-3 rounded-lg bg-white/90 text-purple-900 font-medium"
+              value={formData.response_time}
+              onChange={(e) => setFormData({...formData, response_time: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
             >
-              <option value="">Select...</option>
-              <option value="None yet">Haven't started yet</option>
-              <option value="1-2">1-2 brokers</option>
-              <option value="3-5">3-5 brokers</option>
-              <option value="6-10">6-10 brokers</option>
-              <option value="10+">More than 10</option>
+              <option value="">Select option</option>
+              <option value="same_day">Same day</option>
+              <option value="1-2_days">1-2 days</option>
+              <option value="3-5_days">3-5 days</option>
+              <option value="week_plus">More than a week</option>
+              <option value="varies">Varies a lot</option>
+              <option value="na">N/A</option>
             </select>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-            <label className="block text-lg font-semibold mb-3">
-              10. What matters most when choosing a broker? (Select top 3)
+          {/* Referral Behavior */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-3">
+              Have you referred your broker to another company?
             </label>
-            <div className="space-y-2">
-              {[
-                'Cost savings on premiums',
-                'Broker expertise in our industry',
-                'Broker local to our region',
-                'Employee satisfaction with benefits',
-                'Compliance and risk management',
-                'Technology/platform quality',
-                'Responsiveness and service'
-              ].map(criteria => (
-                <label key={criteria} className="flex items-center gap-3 p-2 rounded hover:bg-white/5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.selectionCriteria.includes(criteria)}
-                    onChange={() => handleCheckboxChange('selectionCriteria', criteria)}
-                    disabled={formData.selectionCriteria.length >= 3 && !formData.selectionCriteria.includes(criteria)}
-                    className="w-5 h-5"
-                  />
-                  <span className={formData.selectionCriteria.length >= 3 && !formData.selectionCriteria.includes(criteria) ? 'text-purple-400' : ''}>
-                    {criteria}
-                  </span>
+            <select
+              value={formData.referred_broker}
+              onChange={(e) => setFormData({...formData, referred_broker: e.target.value})}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 mb-4"
+            >
+              <option value="">Select option</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+              <option value="na">N/A</option>
+            </select>
+
+            {formData.referred_broker === 'no' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Why not?
                 </label>
-              ))}
-            </div>
+                <textarea
+                  value={formData.referral_reason}
+                  onChange={(e) => setFormData({...formData, referral_reason: e.target.value})}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  placeholder="What's the reason?"
+                />
+              </div>
+            )}
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-            <label className="block text-lg font-semibold mb-3">
-              11. What are your biggest frustrations with benefits or brokers? (Select all that apply)
+          {/* Priority Question */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-2">
+              If you were looking for a broker today, what's the #1 thing you'd want to know about them before choosing?
             </label>
-            <div className="space-y-2">
-              {[
-                'Costs keep increasing',
-                'Hard to find specialized brokers',
-                'Too much time spent on research',
-                'Broker isn\'t responsive',
-                'Employees confused about benefits',
-                'Compliance concerns',
-                'Don\'t know if we\'re getting good value'
-              ].map(pain => (
-                <label key={pain} className="flex items-center gap-3 p-2 rounded hover:bg-white/5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.painPoints.includes(pain)}
-                    onChange={() => handleCheckboxChange('painPoints', pain)}
-                    className="w-5 h-5"
-                  />
-                  <span>{pain}</span>
-                </label>
-              ))}
-            </div>
+            <textarea
+              value={formData.priority_question}
+              onChange={(e) => setFormData({...formData, priority_question: e.target.value})}
+              rows={3}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+              placeholder="What matters most?"
+            />
           </div>
 
+          {/* Magic Wand */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-2">
+              If you had a magic wand and could change ONE thing about your benefits setup (broker, process, cost, anything), what would it be?
+            </label>
+            <textarea
+              value={formData.magic_wand}
+              onChange={(e) => setFormData({...formData, magic_wand: e.target.value})}
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+              placeholder="What would you change?"
+            />
           </div>
 
           {/* Submit Button */}
-          <div className="pt-6">
+          <div className="bg-white rounded-lg shadow-lg p-6">
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-green-500 hover:bg-green-600 text-white text-xl font-bold py-6 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-purple-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-purple-700 transition shadow-lg hover:shadow-xl"
             >
-              {loading ? 'Finding Your Matches...' : '🚀 Show Me My Broker Matches'}
+              Submit Survey
             </button>
+            <p className="text-center text-gray-600 text-sm mt-4">
+              Your responses help us build better matching for the entire startup community.
+            </p>
           </div>
 
-          <p className="text-center text-sm text-purple-300">
-            Your responses help us build <strong>better matching</strong> for the entire startup community
-          </p>
         </form>
       </div>
     </div>
