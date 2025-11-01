@@ -235,6 +235,21 @@ export default function BrokerSurvey() {
         <div className="h-px bg-white/20 my-8"></div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-8 text-center mb-8">
+          <h3 className="text-2xl font-bold mb-4">Prefer to Talk First?</h3>
+          <p className="text-purple-200 mb-6">
+            Book a 15-minute call to discuss how BrokerMatch can help you find quality startup clients.
+          </p>
+          <a 
+            href="https://calendly.com/dbrazavi"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-bold transition"
+          >
+            Book a 15-minute call
+          </a>
+          <p className="text-sm text-purple-300 mt-4">Or fill out the survey below to get matched with employers</p>
+        </div>
           
           {/* Email - Required */}
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
