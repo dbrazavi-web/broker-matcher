@@ -183,12 +183,21 @@ export default function BrokerSurvey() {
           </div>
 
           <div className="mt-12 bg-green-500/20 border border-green-500/50 rounded-lg p-6 text-center">
-            <p className="text-lg">
-              ✉️ Check your inbox at <strong>{email}</strong>
+            <p className="text-lg mb-2">
+              We'll email you examples of companies we're working with within the next few hours.
             </p>
-            <p className="text-sm text-purple-200 mt-2">
-              We've sent you <strong>detailed company profiles</strong> and <strong>contact instructions</strong>
+            <div className="h-px bg-green-500/30 my-4"></div>
+            <p className="text-purple-200 mb-4">
+              Want to discuss your practice and how we can send qualified leads your way?
             </p>
+            <a 
+              href="https://calendly.com/dbrazavi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-bold transition"
+            >
+              Book a quick 15-minute call
+            </a>
           </div>
 
           <div className="mt-12 bg-white/10 backdrop-blur-sm rounded-lg p-8 text-center">
