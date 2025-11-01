@@ -206,6 +206,21 @@ export default function EmployerSurvey() {
         <div className="h-px bg-white/20 my-8"></div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="bg-purple-600/20 border border-purple-500/50 rounded-lg p-8 text-center mb-8">
+          <h3 className="text-2xl font-bold mb-4">Want a More Personalized Match?</h3>
+          <p className="text-purple-200 mb-6">
+            Book a 15-minute call to discuss your needs and get customized recommendations.
+          </p>
+          <a 
+            href="https://calendly.com/dbrazavi"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-bold transition"
+          >
+            Book a 15-minute call
+          </a>
+          <p className="text-sm text-purple-300 mt-4">Or fill out the survey below to get instant matches</p>
+        </div>
           
           {/* Note: Questions will be in 3-column grid below */}
           
