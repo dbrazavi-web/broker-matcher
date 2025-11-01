@@ -136,7 +136,7 @@ export default function EmployerSurvey() {
                       href={broker.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+                      className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold transition"
                     >
                       Visit Website
                     </a>
@@ -215,7 +215,7 @@ export default function EmployerSurvey() {
             href="https://calendly.com/dbrazavi"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-bold transition"
+            className="inline-block bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-bold transition"
           >
             Book a 15-minute call
           </a>
