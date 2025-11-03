@@ -192,14 +192,14 @@ export default function AnalysisResults() {
             rel="noopener noreferrer"
             className="bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white text-center font-bold py-4 rounded-lg transition shadow-lg"
           >
-            Book Strategy Call →
+            Book Strategy Call
           </a>
           
           
             href="/surveys/employer"
             className="bg-slate-700 hover:bg-slate-600 text-white text-center font-bold py-4 rounded-lg transition"
           >
-            Get Matched with Brokers →
+            Get Matched with Brokers
           </a>
         </div>
 
