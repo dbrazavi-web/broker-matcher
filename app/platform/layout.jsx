@@ -5,14 +5,16 @@ import { usePathname } from 'next/navigation';
 
 export default function PlatformLayout({ children }) {
   const pathname = usePathname();
-  const [role, setRole] = useState('employer');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Detect role from URL
+  const isBroker = pathname?.includes('/broker');
+  const role = isBroker ? 'broker' : 'employer';
 
   const employerNav = [
     { name: 'Projects', icon: '📊', path: '/platform/projects' },
     { name: 'Stakeholder Alignment', icon: '👥', path: '/platform/alignment' },
     { name: 'Broker Matches', icon: '🤝', path: '/platform/matches' },
-    { name: 'Discovery Questions', icon: '❓', path: '/platform/discovery' },
     { name: 'Reports', icon: '📄', path: '/platform/reports' },
     { name: 'Team', icon: '👤', path: '/platform/team' },
   ];
@@ -21,16 +23,16 @@ export default function PlatformLayout({ children }) {
     { name: 'Dashboard', icon: '📊', path: '/platform/broker/dashboard' },
     { name: 'My Leads', icon: '🎯', path: '/platform/broker/leads' },
     { name: 'Active Clients', icon: '👥', path: '/platform/broker/clients' },
-    { name: 'Network', icon: '🌐', path: '/platform/broker/network' },
-    { name: 'Tools', icon: '🛠️', path: '/platform/broker/tools' },
     { name: 'Profile', icon: '⚙️', path: '/platform/broker/profile' },
   ];
 
-  const navItems = role === 'employer' ? employerNav : brokerNav;
+  const navItems = role === 'broker' ? brokerNav : employerNav;
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex">
+      
       <div className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-slate-900 border-r border-slate-800 flex flex-col transition-all duration-300`}>
+        
         <div className="p-4 border-b border-slate-800 flex items-center justify-between">
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2">
@@ -49,19 +51,6 @@ export default function PlatformLayout({ children }) {
             </svg>
           </button>
         </div>
-
-        {!sidebarCollapsed && (
-          <div className="p-4">
-            <div className="bg-slate-800 rounded-lg p-1 flex">
-              <button onClick={() => setRole('employer')} className={`flex-1 py-2 px-3 rounded text-xs font-medium transition ${role === 'employer' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}>
-                Employer
-              </button>
-              <button onClick={() => setRole('broker')} className={`flex-1 py-2 px-3 rounded text-xs font-medium transition ${role === 'broker' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}>
-                Broker
-              </button>
-            </div>
-          </div>
-        )}
 
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
@@ -82,8 +71,8 @@ export default function PlatformLayout({ children }) {
                 <span className="text-white font-bold text-sm">DR</span>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium truncate">Darius R.</div>
-                <div className="text-xs text-slate-400 truncate">dbrazavi@gmail.com</div>
+                <div className="text-sm font-medium truncate">You</div>
+                <div className="text-xs text-slate-400 truncate capitalize">{role}</div>
               </div>
             </div>
           </div>
@@ -93,6 +82,7 @@ export default function PlatformLayout({ children }) {
       <div className="flex-1 overflow-auto">
         {children}
       </div>
+
     </div>
   );
 }
