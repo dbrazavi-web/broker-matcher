@@ -9,30 +9,20 @@ function AIChatContent() {
   
   const [messages, setMessages] = useState([
     { role: 'ai', content: role === 'broker' 
-      ? "👋 Hi! I'm RightFit AI. Let me get you set up in our broker network - this takes 2 minutes. First, what's your firm name?"
-      : "👋 Hi! I'm RightFit, your AI Benefits Agent. I'll help align your team in just a few minutes. Let's start - what's your company name?", 
+      ? "👋 Hi! I'm RightFit AI. Let me get you set up - takes 2 minutes. What's your firm name?"
+      : "👋 Hi! I'm RightFit AI. I'll help align your team. What's your company name?", 
       timestamp: new Date() 
     }
   ]);
   const [input, setInput] = useState('');
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState({
-    name: '',
-    size: '',
-    email: '',
-    industry: '',
-    yearsExp: '',
-    specialty: ''
-  });
+  const [showFollowUps, setShowFollowUps] = useState(false);
+  const [answers, setAnswers] = useState({ name: '', size: '', email: '', industry: '', yearsExp: '', specialty: '' });
   const [aiTyping, setAiTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const employerQuestions = [
@@ -52,28 +42,8 @@ function AIChatContent() {
 
   const questions = role === 'broker' ? brokerQuestions : employerQuestions;
 
-  const brokerFollowUps = () => {
-    return {
-      h1: "Quick question: Do SMB clients (10-100 employees) get same response time as larger clients?",
-      h1Options: ['Yes, same service', 'No, enterprise gets priority', 'Depends on urgency'],
-      h2: "Honestly - what's your minimum client size you'll take on?",
-      h2Options: ['No minimum', '10-50', '50-100', '100+'],
-      h3: "Would an employer pay $999/month for guaranteed same-day response?",
-      h3Options: ['Yes, definitely', 'Maybe', 'No, too high'],
-      h4: "Know other brokers who specialize in sub-100 employee companies?",
-      h4Options: ['Yes, many', 'A few', 'No, rare']
-    };
-  };
-
-  const predictAnswers = (industry) => {
-    if (industry === 'Technology') {
-      return { priorities: { cfo: 45, hr: 65, ceo: 70, employee: 60 }, timeline: '1-3 months', budget: '$100K-$250K' };
-    }
-    return { priorities: { cfo: 40, hr: 60, ceo: 55, employee: 55 }, timeline: '1-3 months', budget: '$50K-$100K' };
-  };
-
-  const addMessage = (role, content) => {
-    setMessages(prev => [...prev, { role, content, timestamp: new Date() }]);
+  const addMessage = (msgRole, content) => {
+    setMessages(prev => [...prev, { role: msgRole, content, timestamp: new Date() }]);
   };
 
   const addAIMessage = (content, delay = 800) => {
@@ -90,24 +60,38 @@ function AIChatContent() {
     const newAnswers = { ...answers, [currentQ.key]: answer };
     setAnswers(newAnswers);
 
+    // EMPLOYER: Show predictions after industry
     if (role === 'employer' && currentQ.key === 'industry') {
-      const predictions = predictAnswers(answer);
+      const predictions = { priorities: { cfo: 45, hr: 65, ceo: 70, employee: 60 }, timeline: '1-3 months', budget: '$100K-$250K' };
       setTimeout(() => {
         setMessages(prev => [...prev, { role: 'ai-suggestions', predictions, timestamp: new Date() }]);
       }, 1200);
       return;
     }
 
-    if (role === 'broker' && currentQ.key === 'specialty') {
+    // BROKER: Show follow-ups ONCE after specialty
+    if (role === 'broker' && currentQ.key === 'specialty' && !showFollowUps) {
+      setShowFollowUps(true);
       setTimeout(() => {
         addAIMessage("Perfect! 4 quick follow-ups (30 seconds)...", 800);
         setTimeout(() => {
-          setMessages(prev => [...prev, { role: 'broker-followups', followUps: brokerFollowUps(), timestamp: new Date() }]);
+          const followUps = {
+            h1: "Do SMB clients (10-100 employees) get same response time as larger clients?",
+            h1Options: ['Yes, same service', 'No, enterprise priority', 'Depends'],
+            h2: "What's your minimum client size?",
+            h2Options: ['No minimum', '10-50', '50-100', '100+'],
+            h3: "Would employers pay $999/month for guaranteed same-day response?",
+            h3Options: ['Yes', 'Maybe', 'No'],
+            h4: "Know brokers who specialize in sub-100 employee companies?",
+            h4Options: ['Yes, many', 'A few', 'No, rare']
+          };
+          setMessages(prev => [...prev, { role: 'broker-followups', followUps, timestamp: new Date() }]);
         }, 1600);
       }, 500);
       return;
     }
 
+    // Move to next question
     if (currentQuestion < questions.length - 1) {
       setTimeout(() => {
         addAIMessage(questions[currentQuestion + 1].question, 600);
@@ -159,7 +143,7 @@ function AIChatContent() {
             <div key={idx}>
               {msg.role === 'ai' && (
                 <div className="flex gap-4 items-start">
-                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">🤖</div>
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">🤖</div>
                   <div className="bg-slate-800 border border-slate-700 rounded-2xl px-6 py-4">
                     <p className="text-slate-100">{msg.content}</p>
                   </div>
@@ -172,22 +156,18 @@ function AIChatContent() {
                   </div>
                 </div>
               )}
-              {msg.role === 'ai-suggestions' && (
-                <EmployerPredictions predictions={msg.predictions} onAccept={acceptPredictions} />
-              )}
-              {msg.role === 'broker-followups' && (
-                <BrokerFollowUps followUps={msg.followUps} onSubmit={submitBrokerFollowUps} />
-              )}
+              {msg.role === 'ai-suggestions' && <EmployerPredictions predictions={msg.predictions} onAccept={acceptPredictions} />}
+              {msg.role === 'broker-followups' && <BrokerFollowUps followUps={msg.followUps} onSubmit={submitBrokerFollowUps} />}
             </div>
           ))}
-          {aiTyping && <div className="flex gap-4"><div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">🤖</div><div className="bg-slate-800 rounded-2xl px-6 py-4"><div className="flex gap-1"><div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div><div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay:'150ms'}}></div><div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay:'300ms'}}></div></div></div></div>}
+          {aiTyping && <div className="flex gap-4"><div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">🤖</div><div className="bg-slate-800 rounded-2xl px-6 py-4"><div className="flex gap-1"><div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div></div></div></div>}
           <div ref={messagesEndRef} />
         </div>
       </div>
 
       <div className="border-t border-slate-700 bg-slate-900/50 p-6">
         <div className="max-w-3xl mx-auto">
-          {currentQuestion < questions.length && questions[currentQuestion].type === 'select' && (
+          {currentQuestion < questions.length && questions[currentQuestion].type === 'select' && !showFollowUps && (
             <div className="flex flex-wrap gap-2 mb-4">
               {questions[currentQuestion].options.map(option => (
                 <button key={option} onClick={() => handleAnswer(option)} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm">
@@ -196,10 +176,12 @@ function AIChatContent() {
               ))}
             </div>
           )}
-          <form onSubmit={handleSubmit} className="flex gap-3">
-            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type..." className="flex-1 px-6 py-4 bg-slate-800 border border-slate-600 rounded-xl text-white" />
-            <button type="submit" disabled={!input.trim()} className="px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-xl font-bold">Send</button>
-          </form>
+          {!showFollowUps && (
+            <form onSubmit={handleSubmit} className="flex gap-3">
+              <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type..." className="flex-1 px-6 py-4 bg-slate-800 border border-slate-600 rounded-xl text-white" />
+              <button type="submit" disabled={!input.trim()} className="px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-xl font-bold">Send</button>
+            </form>
+          )}
         </div>
       </div>
     </div>
@@ -209,12 +191,10 @@ function AIChatContent() {
 function EmployerPredictions({ predictions, onAccept }) {
   return (
     <div className="flex gap-4">
-      <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">✨</div>
+      <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">✨</div>
       <div className="flex-1 bg-purple-900/30 border-2 border-purple-500/50 rounded-2xl px-6 py-4">
         <p className="font-bold mb-3">🔮 AI Predictions</p>
-        <div className="space-y-2 mb-4">
-          <div className="bg-slate-900/50 rounded p-2"><span className="text-slate-400">Budget:</span><span className="text-white ml-2">{predictions.budget}</span></div>
-        </div>
+        <div className="bg-slate-900/50 rounded p-2 mb-4"><span className="text-slate-400">Budget:</span><span className="text-white ml-2">{predictions.budget}</span></div>
         <button onClick={() => onAccept(predictions)} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg">✓ Accept & See Matches</button>
       </div>
     </div>
@@ -224,24 +204,29 @@ function EmployerPredictions({ predictions, onAccept }) {
 function BrokerFollowUps({ followUps, onSubmit }) {
   const [answers, setAnswers] = useState({});
   const allAnswered = Object.keys(answers).length === 4;
+  
   return (
     <div className="flex gap-4">
-      <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">📋</div>
+      <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">📋</div>
       <div className="flex-1 bg-green-900/30 border-2 border-green-500/50 rounded-2xl px-6 py-4">
         <p className="font-bold mb-4">Quick Follow-ups</p>
         <div className="space-y-3 mb-4">
           {['h1','h2','h3','h4'].map(key => (
             <div key={key} className="bg-slate-900/50 rounded p-3">
-              <p className="text-sm mb-2">{followUps[key]}</p>
+              <p className="text-sm text-slate-300 mb-2">{followUps[key]}</p>
               <div className="flex flex-wrap gap-2">
                 {followUps[key+'Options'].map(opt => (
-                  <button key={opt} onClick={() => setAnswers({...answers, [key]: opt})} className={`px-3 py-1 rounded text-xs ${answers[key] === opt ? 'bg-green-600 text-white' : 'bg-slate-800 hover:bg-slate-700'}`}>{opt}</button>
+                  <button key={opt} onClick={() => setAnswers({...answers, [key]: opt})} className={`px-3 py-1 rounded text-xs transition ${answers[key] === opt ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}>
+                    {opt}
+                  </button>
                 ))}
               </div>
             </div>
           ))}
         </div>
-        <button onClick={() => onSubmit(answers)} disabled={!allAnswered} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg">✓ Complete</button>
+        <button onClick={() => onSubmit(answers)} disabled={!allAnswered} className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition">
+          ✓ Complete & View Dashboard
+        </button>
       </div>
     </div>
   );
