@@ -27,15 +27,15 @@ function ChatContent() {
     { key: 'name', q: "What's your company name?", type: 'text' },
     { key: 'size', q: "How many employees?", type: 'buttons', opts: ['10-50', '51-200', '201-500', '500+'] },
     { key: 'email', q: "Your email?", type: 'text' },
-    { key: 'industry', q: "What industry?", type: 'buttons', opts: ['Technology', 'Healthcare', 'Finance', 'Retail', 'Other'] }
+    { key: 'industry', q: "What industry?", type: 'buttons', opts: ['Technology', 'Healthcare', 'Financial Services', 'Retail', 'Manufacturing', 'Professional Services', 'Other'] }
   ];
 
   const brokerQuestions = [
     { key: 'name', q: "What's your firm name?", type: 'text' },
     { key: 'email', q: "Your email?", type: 'text' },
-    { key: 'years', q: "Years of experience?", type: 'buttons', opts: ['0-5', '5-10', '10-15', '15+'] },
-    { key: 'clientSize', q: "Sweet spot client size?", type: 'buttons', opts: ['10-50', '51-200', '201-500', '500+'] },
-    { key: 'specialty', q: "Primary specialty?", type: 'buttons', opts: ['SMB Focus', 'Enterprise', 'Cost Optimization', 'Tech Industry', 'Healthcare'] }
+    { key: 'years', q: "Years of experience?", type: 'buttons', opts: ['0-5 years', '5-10 years', '10-15 years', '15+ years'] },
+    { key: 'clientSize', q: "Sweet spot client size?", type: 'buttons', opts: ['10-50 employees', '51-200 employees', '201-500 employees', '500+ employees', 'All sizes'] },
+    { key: 'specialty', q: "Primary specialty?", type: 'buttons', opts: ['SMB Focus', 'Enterprise', 'Cost Optimization', 'Tech Industry', 'Healthcare', 'Full Service'] }
   ];
 
   const questions = role === 'broker' ? brokerQuestions : employerQuestions;
@@ -59,7 +59,7 @@ function ChatContent() {
     // BROKER: Show followups after specialty
     if (role === 'broker' && currentQ.key === 'specialty') {
       setTimeout(() => {
-        addMsg('ai', 'Perfect! 4 quick follow-ups (30 seconds)...');
+        addMsg('ai', 'Perfect! 4 quick follow-ups to validate our network (30 seconds)...');
         setTimeout(() => {
           setShowFollowups(true);
           setMessages(m => [...m, { role: 'followups' }]);
@@ -98,7 +98,7 @@ function ChatContent() {
               )}
               {m.role === 'user' && (
                 <div className="flex justify-end">
-                  <div className="bg-blue-600 rounded-2xl px-6 py-4">{m.content}</div>
+                  <div className="bg-blue-600 rounded-2xl px-6 py-4 max-w-xl">{m.content}</div>
                 </div>
               )}
               {m.role === 'predict' && <PredictBox onAccept={() => router.push('/platform/projects')} />}
@@ -122,8 +122,8 @@ function ChatContent() {
           )}
           {!showFollowups && currentQ?.type === 'text' && (
             <form onSubmit={(e) => { e.preventDefault(); if (input) { handleAnswer(input); setInput(''); } }} className="flex gap-3">
-              <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your answer..." className="flex-1 px-6 py-3 bg-slate-800 rounded-xl text-white" />
-              <button type="submit" className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold">Send</button>
+              <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your answer..." className="flex-1 px-6 py-3 bg-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+              <button type="submit" className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold transition">Send</button>
             </form>
           )}
         </div>
@@ -137,13 +137,19 @@ function PredictBox({ onAccept }) {
     <div className="flex gap-3">
       <div className="w-10 h-10 bg-purple-500 rounded-full flex-shrink-0">✨</div>
       <div className="flex-1 bg-purple-900/30 border-2 border-purple-500/50 rounded-2xl px-6 py-4">
-        <p className="font-bold mb-2">🔮 AI Predictions</p>
-        <div className="bg-slate-900/50 rounded p-3 mb-4">
-          <span className="text-slate-400">Budget:</span>
-          <span className="ml-2">$100K-$250K</span>
+        <p className="font-bold mb-3">🔮 AI Predictions Based on Your Profile</p>
+        <div className="space-y-2 mb-4">
+          <div className="bg-slate-900/50 rounded p-3">
+            <span className="text-slate-400">Recommended Budget:</span>
+            <span className="ml-2 font-semibold">$100K-$250K</span>
+          </div>
+          <div className="bg-slate-900/50 rounded p-3">
+            <span className="text-slate-400">Timeline:</span>
+            <span className="ml-2 font-semibold">1-3 months</span>
+          </div>
         </div>
-        <button onClick={onAccept} className="w-full bg-purple-600 hover:bg-purple-700 py-3 rounded-lg font-bold">
-          ✓ Accept & Continue
+        <button onClick={onAccept} className="w-full bg-purple-600 hover:bg-purple-700 py-3 rounded-lg font-bold transition">
+          ✓ Accept & View My Matches
         </button>
       </div>
     </div>
@@ -155,27 +161,27 @@ function FollowupsBox({ onComplete }) {
   const ready = a.q1 && a.q2 && a.q3 && a.q4;
 
   const qs = [
-    { k: 'q1', q: 'Do SMB clients (10-100 employees) get same response time as larger clients?', opts: ['Yes', 'No', 'Depends'] },
-    { k: 'q2', q: "What's your minimum client size?", opts: ['No min', '10-50', '50-100', '100+'] },
-    { k: 'q3', q: 'Would employers pay $999/month for guaranteed same-day response?', opts: ['Yes', 'Maybe', 'No'] },
-    { k: 'q4', q: 'Know brokers who specialize in sub-100 employee companies?', opts: ['Yes many', 'A few', 'No rare'] }
+    { k: 'q1', q: 'Do SMB clients (10-100 employees) get same response time as larger clients?', opts: ['Yes, same service', 'No, enterprise priority', 'Depends on urgency'] },
+    { k: 'q2', q: "What's your minimum client size you'll take on?", opts: ['No minimum', '10-50', '50-100', '100+'] },
+    { k: 'q3', q: 'Would an employer pay $999/month for guaranteed same-day response?', opts: ['Yes, definitely', 'Maybe', 'No, too high'] },
+    { k: 'q4', q: 'Know other brokers who specialize in sub-100 employee companies?', opts: ['Yes, many', 'A few', 'No, rare'] }
   ];
 
   return (
     <div className="flex gap-3">
       <div className="w-10 h-10 bg-green-500 rounded-full flex-shrink-0">📋</div>
       <div className="flex-1 bg-green-900/30 border-2 border-green-500/50 rounded-2xl px-6 py-4">
-        <p className="font-bold mb-4">Quick Follow-ups</p>
+        <p className="font-bold mb-4">Quick Follow-ups (H1-H4 Validation)</p>
         <div className="space-y-3 mb-4">
           {qs.map(q => (
             <div key={q.k} className="bg-slate-900/50 rounded p-3">
-              <p className="text-sm mb-2">{q.q}</p>
+              <p className="text-sm mb-2 text-slate-300">{q.q}</p>
               <div className="flex flex-wrap gap-2">
                 {q.opts.map(o => (
                   <button 
                     key={o} 
                     onClick={() => setA({...a, [q.k]: o})} 
-                    className={`px-3 py-1 rounded text-xs transition ${a[q.k]===o ? 'bg-green-600 text-white' : 'bg-slate-800 hover:bg-slate-700'}`}
+                    className={`px-3 py-1 rounded text-xs transition ${a[q.k]===o ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
                   >
                     {o}
                   </button>
@@ -189,7 +195,7 @@ function FollowupsBox({ onComplete }) {
           disabled={!ready}
           className={`w-full py-3 rounded-lg font-bold transition ${ready ? 'bg-green-600 hover:bg-green-700' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
         >
-          {ready ? '✓ Complete!' : `Answer all 4 (${Object.keys(a).length}/4)`}
+          {ready ? '✓ Complete & View Dashboard' : `Answer all 4 questions (${Object.keys(a).length}/4)`}
         </button>
       </div>
     </div>
