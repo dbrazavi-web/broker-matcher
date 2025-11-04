@@ -25,13 +25,16 @@ function ChatContent() {
 
   const employerQuestions = [
     { key: 'name', q: "What's your company name?", type: 'text' },
+    { key: 'location', q: "Where is your company located? (City, State)", type: 'text' },
     { key: 'size', q: "How many employees?", type: 'buttons', opts: ['10-50', '51-200', '201-500', '500+'] },
     { key: 'email', q: "Your email?", type: 'text' },
-    { key: 'industry', q: "What industry?", type: 'buttons', opts: ['Technology', 'Healthcare', 'Financial Services', 'Retail', 'Manufacturing', 'Professional Services', 'Other'] }
+    { key: 'industry', q: "What industry?", type: 'buttons', opts: ['Technology', 'Healthcare', 'Financial Services', 'Retail', 'Manufacturing', 'Professional Services', 'Other'] },
+    { key: 'painPoint', q: "What's your biggest benefits challenge?", type: 'buttons', opts: ['High costs', 'Low employee satisfaction', 'Poor broker service', 'Complex administration', 'Need better coverage'] }
   ];
 
   const brokerQuestions = [
     { key: 'name', q: "What's your firm name?", type: 'text' },
+    { key: 'location', q: "Where are you located? (City, State)", type: 'text' },
     { key: 'email', q: "Your email?", type: 'text' },
     { key: 'years', q: "Years of experience?", type: 'buttons', opts: ['0-5 years', '5-10 years', '10-15 years', '15+ years'] },
     { key: 'clientSize', q: "Sweet spot client size?", type: 'buttons', opts: ['10-50 employees', '51-200 employees', '201-500 employees', '500+ employees', 'All sizes'] },
@@ -48,11 +51,15 @@ function ChatContent() {
     const newData = { ...data, [currentQ.key]: ans };
     setData(newData);
 
-    // EMPLOYER: Show predictions after industry
-    if (role === 'employer' && currentQ.key === 'industry') {
+    // EMPLOYER: Show H1-H4 followups after last question
+    if (role === 'employer' && currentQ.key === 'painPoint') {
       setTimeout(() => {
-        setMessages(m => [...m, { role: 'predict' }]);
-      }, 800);
+        addMsg('ai', 'Perfect! 4 quick validation questions (30 seconds)...');
+        setTimeout(() => {
+          setShowFollowups(true);
+          setMessages(m => [...m, { role: 'employer-followups' }]);
+        }, 1000);
+      }, 500);
       return;
     }
 
@@ -62,7 +69,7 @@ function ChatContent() {
         addMsg('ai', 'Perfect! 4 quick follow-ups to validate our network (30 seconds)...');
         setTimeout(() => {
           setShowFollowups(true);
-          setMessages(m => [...m, { role: 'followups' }]);
+          setMessages(m => [...m, { role: 'broker-followups' }]);
         }, 1000);
       }, 500);
       return;
@@ -101,8 +108,8 @@ function ChatContent() {
                   <div className="bg-blue-600 rounded-2xl px-6 py-4 max-w-xl">{m.content}</div>
                 </div>
               )}
-              {m.role === 'predict' && <PredictBox onAccept={() => router.push('/platform/matches')} />}
-              {m.role === 'followups' && <FollowupsBox onComplete={() => router.push('/platform/broker/dashboard')} />}
+              {m.role === 'employer-followups' && <EmployerFollowups onComplete={() => router.push('/platform/alignment')} />}
+              {m.role === 'broker-followups' && <BrokerFollowups onComplete={() => router.push('/platform/broker/dashboard')} />}
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -132,35 +139,53 @@ function ChatContent() {
   );
 }
 
-function PredictBox({ onAccept }) {
+function EmployerFollowups({ onComplete }) {
+  const [a, setA] = useState({});
+  const ready = a.q1 && a.q2 && a.q3 && a.q4;
+
+  const qs = [
+    { k: 'q1', q: 'How satisfied are you with your current broker response time?', opts: ['Very satisfied', 'Somewhat satisfied', 'Not satisfied'] },
+    { k: 'q2', q: 'Would you pay $999/month for guaranteed same-day broker response?', opts: ['Yes, definitely', 'Maybe', 'No, too high'] },
+    { k: 'q3', q: 'Which matters more: cost savings or service quality?', opts: ['Cost savings', 'Service quality', 'Both equally'] },
+    { k: 'q4', q: 'How long did your last benefits project take?', opts: ['< 1 month', '1-3 months', '3-6 months', '6+ months'] }
+  ];
+
   return (
     <div className="flex gap-3">
-      <div className="w-10 h-10 bg-purple-500 rounded-full flex-shrink-0">✨</div>
+      <div className="w-10 h-10 bg-purple-500 rounded-full flex-shrink-0">📋</div>
       <div className="flex-1 bg-purple-900/30 border-2 border-purple-500/50 rounded-2xl px-6 py-4">
-        <p className="font-bold mb-3">🔮 AI Analysis Complete</p>
-        <div className="space-y-2 mb-4">
-          <div className="bg-slate-900/50 rounded p-3">
-            <span className="text-slate-400">Recommended Budget:</span>
-            <span className="ml-2 font-semibold">$100K-$250K</span>
-          </div>
-          <div className="bg-slate-900/50 rounded p-3">
-            <span className="text-slate-400">Timeline:</span>
-            <span className="ml-2 font-semibold">1-3 months</span>
-          </div>
-          <div className="bg-slate-900/50 rounded p-3">
-            <span className="text-slate-400">Matches Found:</span>
-            <span className="ml-2 font-semibold text-green-400">3 Perfect Brokers</span>
-          </div>
+        <p className="font-bold mb-4">Quick Validation Questions (H1-H4)</p>
+        <div className="space-y-3 mb-4">
+          {qs.map(q => (
+            <div key={q.k} className="bg-slate-900/50 rounded p-3">
+              <p className="text-sm mb-2 text-slate-300">{q.q}</p>
+              <div className="flex flex-wrap gap-2">
+                {q.opts.map(o => (
+                  <button 
+                    key={o} 
+                    onClick={() => setA({...a, [q.k]: o})} 
+                    className={`px-3 py-1 rounded text-xs transition ${a[q.k]===o ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                  >
+                    {o}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
-        <button onClick={onAccept} className="w-full bg-purple-600 hover:bg-purple-700 py-3 rounded-lg font-bold transition">
-          ✓ View My Top 3 Matches
+        <button 
+          onClick={onComplete}
+          disabled={!ready}
+          className={`w-full py-3 rounded-lg font-bold transition ${ready ? 'bg-purple-600 hover:bg-purple-700' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
+        >
+          {ready ? '✓ Complete & Start Alignment' : `Answer all 4 (${Object.keys(a).length}/4)`}
         </button>
       </div>
     </div>
   );
 }
 
-function FollowupsBox({ onComplete }) {
+function BrokerFollowups({ onComplete }) {
   const [a, setA] = useState({});
   const ready = a.q1 && a.q2 && a.q3 && a.q4;
 
@@ -199,7 +224,7 @@ function FollowupsBox({ onComplete }) {
           disabled={!ready}
           className={`w-full py-3 rounded-lg font-bold transition ${ready ? 'bg-green-600 hover:bg-green-700' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
         >
-          {ready ? '✓ Complete & View Dashboard' : `Answer all 4 questions (${Object.keys(a).length}/4)`}
+          {ready ? '✓ Complete & View Dashboard' : `Answer all 4 (${Object.keys(a).length}/4)`}
         </button>
       </div>
     </div>
