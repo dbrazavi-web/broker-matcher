@@ -10,7 +10,7 @@ function ChatContent() {
   const [messages, setMessages] = useState([
     { role: 'ai', content: role === 'broker' 
       ? "👋 Hi! I'm RightFit AI. Let me get you set up in our broker network - takes 2 minutes. What's your firm name?"
-      : "👋 Hi! I'm RightFit AI. I'll help align your team in just a few minutes. What's your company name?" 
+      : "👋 Hi! I'm RightFit AI. I'll help you find your perfect broker in just a few minutes. What's your company name?" 
     }
   ]);
   const [input, setInput] = useState('');
@@ -101,7 +101,7 @@ function ChatContent() {
                   <div className="bg-blue-600 rounded-2xl px-6 py-4 max-w-xl">{m.content}</div>
                 </div>
               )}
-              {m.role === 'predict' && <PredictBox onAccept={() => router.push('/platform/projects')} />}
+              {m.role === 'predict' && <PredictBox onAccept={() => router.push('/platform/matches')} />}
               {m.role === 'followups' && <FollowupsBox onComplete={() => router.push('/platform/broker/dashboard')} />}
             </div>
           ))}
@@ -122,7 +122,7 @@ function ChatContent() {
           )}
           {!showFollowups && currentQ?.type === 'text' && (
             <form onSubmit={(e) => { e.preventDefault(); if (input) { handleAnswer(input); setInput(''); } }} className="flex gap-3">
-              <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your answer..." className="flex-1 px-6 py-3 bg-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+              <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your answer..." className="flex-1 px-6 py-3 bg-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none" />
               <button type="submit" className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold transition">Send</button>
             </form>
           )}
@@ -137,7 +137,7 @@ function PredictBox({ onAccept }) {
     <div className="flex gap-3">
       <div className="w-10 h-10 bg-purple-500 rounded-full flex-shrink-0">✨</div>
       <div className="flex-1 bg-purple-900/30 border-2 border-purple-500/50 rounded-2xl px-6 py-4">
-        <p className="font-bold mb-3">🔮 AI Predictions Based on Your Profile</p>
+        <p className="font-bold mb-3">🔮 AI Analysis Complete</p>
         <div className="space-y-2 mb-4">
           <div className="bg-slate-900/50 rounded p-3">
             <span className="text-slate-400">Recommended Budget:</span>
@@ -147,9 +147,13 @@ function PredictBox({ onAccept }) {
             <span className="text-slate-400">Timeline:</span>
             <span className="ml-2 font-semibold">1-3 months</span>
           </div>
+          <div className="bg-slate-900/50 rounded p-3">
+            <span className="text-slate-400">Matches Found:</span>
+            <span className="ml-2 font-semibold text-green-400">3 Perfect Brokers</span>
+          </div>
         </div>
         <button onClick={onAccept} className="w-full bg-purple-600 hover:bg-purple-700 py-3 rounded-lg font-bold transition">
-          ✓ Accept & View My Matches
+          ✓ View My Top 3 Matches
         </button>
       </div>
     </div>
