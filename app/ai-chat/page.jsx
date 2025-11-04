@@ -51,7 +51,6 @@ function ChatContent() {
     const newData = { ...data, [currentQ.key]: ans };
     setData(newData);
 
-    // EMPLOYER: Show H1-H4 followups after last question
     if (role === 'employer' && currentQ.key === 'painPoint') {
       setTimeout(() => {
         addMsg('ai', 'Perfect! 4 quick validation questions (30 seconds)...');
@@ -63,7 +62,6 @@ function ChatContent() {
       return;
     }
 
-    // BROKER: Show followups after specialty
     if (role === 'broker' && currentQ.key === 'specialty') {
       setTimeout(() => {
         addMsg('ai', 'Perfect! 4 quick follow-ups to validate our network (30 seconds)...');
@@ -75,7 +73,6 @@ function ChatContent() {
       return;
     }
 
-    // Next question
     if (step < questions.length - 1) {
       setStep(step + 1);
       setTimeout(() => addMsg('ai', questions[step + 1].q), 600);
@@ -154,7 +151,7 @@ function EmployerFollowups({ onComplete }) {
     <div className="flex gap-3">
       <div className="w-10 h-10 bg-purple-500 rounded-full flex-shrink-0">📋</div>
       <div className="flex-1 bg-purple-900/30 border-2 border-purple-500/50 rounded-2xl px-6 py-4">
-        <p className="font-bold mb-4">Quick Validation Questions (H1-H4)</p>
+        <p className="font-bold mb-4">Quick Validation Questions</p>
         <div className="space-y-3 mb-4">
           {qs.map(q => (
             <div key={q.k} className="bg-slate-900/50 rounded p-3">
@@ -176,7 +173,7 @@ function EmployerFollowups({ onComplete }) {
         <button 
           onClick={onComplete}
           disabled={!ready}
-          className={`w-full py-3 rounded-lg font-bold transition ${ready ? 'bg-purple-600 hover:bg-purple-700' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
+          className={`w-full py-3 rounded-lg font-bold transition ${ready ? 'bg-purple-600 hover:bg-purple-700 cursor-pointer' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
         >
           {ready ? '✓ Complete & Start Alignment' : `Answer all 4 (${Object.keys(a).length}/4)`}
         </button>
@@ -187,7 +184,7 @@ function EmployerFollowups({ onComplete }) {
 
 function BrokerFollowups({ onComplete }) {
   const [a, setA] = useState({});
-  const ready = a.q1 && a.q2 && a.q3 && a.q4;
+  const ready = !!(a.q1 && a.q2 && a.q3 && a.q4);
 
   const qs = [
     { k: 'q1', q: 'Do SMB clients (10-100 employees) get same response time as larger clients?', opts: ['Yes, same service', 'No, enterprise priority', 'Depends on urgency'] },
@@ -196,11 +193,18 @@ function BrokerFollowups({ onComplete }) {
     { k: 'q4', q: 'Know other brokers who specialize in sub-100 employee companies?', opts: ['Yes, many', 'A few', 'No, rare'] }
   ];
 
+  const handleComplete = () => {
+    console.log('Button clicked, ready:', ready, 'answers:', a);
+    if (ready) {
+      onComplete();
+    }
+  };
+
   return (
     <div className="flex gap-3">
       <div className="w-10 h-10 bg-green-500 rounded-full flex-shrink-0">📋</div>
       <div className="flex-1 bg-green-900/30 border-2 border-green-500/50 rounded-2xl px-6 py-4">
-        <p className="font-bold mb-4">Quick Follow-ups (H1-H4 Validation)</p>
+        <p className="font-bold mb-4">Quick Follow-ups</p>
         <div className="space-y-3 mb-4">
           {qs.map(q => (
             <div key={q.k} className="bg-slate-900/50 rounded p-3">
@@ -209,7 +213,10 @@ function BrokerFollowups({ onComplete }) {
                 {q.opts.map(o => (
                   <button 
                     key={o} 
-                    onClick={() => setA({...a, [q.k]: o})} 
+                    onClick={() => {
+                      console.log('Clicked:', q.k, o);
+                      setA({...a, [q.k]: o});
+                    }} 
                     className={`px-3 py-1 rounded text-xs transition ${a[q.k]===o ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
                   >
                     {o}
@@ -220,11 +227,11 @@ function BrokerFollowups({ onComplete }) {
           ))}
         </div>
         <button 
-          onClick={onComplete}
+          onClick={handleComplete}
           disabled={!ready}
-          className={`w-full py-3 rounded-lg font-bold transition ${ready ? 'bg-green-600 hover:bg-green-700' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
+          className={`w-full py-3 rounded-lg font-bold transition ${ready ? 'bg-green-600 hover:bg-green-700 cursor-pointer' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
         >
-          {ready ? '✓ Complete & View Dashboard' : `Answer all 4 (${Object.keys(a).length}/4)`}
+          {ready ? '✓ Complete & View Dashboard' : `Answer all 4 questions (${Object.keys(a).length}/4)`}
         </button>
       </div>
     </div>
