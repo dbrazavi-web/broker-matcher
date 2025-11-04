@@ -10,10 +10,11 @@ function ChatContent() {
   const [messages, setMessages] = useState([
     { role: 'ai', content: role === 'broker' 
       ? "👋 Hi! I'm RightFit AI. Let me get you set up in our broker network - takes 2 minutes. What's your firm name?"
-      : "👋 Hi! I'm RightFit AI. I'll help you find your perfect broker in just a few minutes. What's your company name?" 
+      : "👋 Hi! I'm RightFit AI. I'll help you find your perfect broker match. What's your company name?" 
     }
   ]);
   const [input, setInput] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [step, setStep] = useState(0);
   const [data, setData] = useState({});
   const [showFollowups, setShowFollowups] = useState(false);
@@ -24,21 +25,21 @@ function ChatContent() {
   }, [messages]);
 
   const employerQuestions = [
-    { key: 'name', q: "What's your company name?", type: 'text' },
-    { key: 'location', q: "Where is your company located? (City, State)", type: 'text' },
+    { key: 'name', q: "What's your company name?", type: 'text', placeholder: 'e.g., Acme Corp' },
+    { key: 'location', q: "Where is your company located?", type: 'text', placeholder: 'City, State (e.g., Austin, TX)' },
     { key: 'size', q: "How many employees?", type: 'buttons', opts: ['10-50', '51-200', '201-500', '500+'] },
-    { key: 'email', q: "Your email?", type: 'text' },
-    { key: 'industry', q: "What industry?", type: 'buttons', opts: ['Technology', 'Healthcare', 'Financial Services', 'Retail', 'Manufacturing', 'Professional Services', 'Other'] },
-    { key: 'painPoint', q: "What's your biggest benefits challenge?", type: 'buttons', opts: ['High costs', 'Low employee satisfaction', 'Poor broker service', 'Complex administration', 'Need better coverage'] }
+    { key: 'email', q: "Your work email?", type: 'email', placeholder: 'you@company.com' },
+    { key: 'industry', q: "What industry?", type: 'buttons', opts: ['Technology/SaaS', 'FinTech', 'Healthcare/Biotech', 'Financial Services', 'E-commerce/Retail', 'Professional Services', 'Manufacturing', 'Media/Entertainment', 'Other'] },
+    { key: 'painPoint', q: "What's your #1 benefits challenge right now?", type: 'buttons', opts: ['Costs too high', 'Takes too long to decide', 'Stakeholders never agree', 'Poor employee satisfaction', 'Broker not responsive', 'Too complex to manage'] }
   ];
 
   const brokerQuestions = [
-    { key: 'name', q: "What's your firm name?", type: 'text' },
-    { key: 'location', q: "Where are you located? (City, State)", type: 'text' },
-    { key: 'email', q: "Your email?", type: 'text' },
-    { key: 'years', q: "Years of experience?", type: 'buttons', opts: ['0-5 years', '5-10 years', '10-15 years', '15+ years'] },
-    { key: 'clientSize', q: "Sweet spot client size?", type: 'buttons', opts: ['10-50 employees', '51-200 employees', '201-500 employees', '500+ employees', 'All sizes'] },
-    { key: 'specialty', q: "Primary specialty?", type: 'buttons', opts: ['SMB Focus', 'Enterprise', 'Cost Optimization', 'Tech Industry', 'Healthcare', 'Full Service'] }
+    { key: 'name', q: "What's your brokerage firm name?", type: 'text', placeholder: 'e.g., Strategic Benefits Group' },
+    { key: 'location', q: "Where are you located?", type: 'text', placeholder: 'City, State (e.g., San Francisco, CA)' },
+    { key: 'email', q: "Your work email?", type: 'email', placeholder: 'you@brokerage.com' },
+    { key: 'years', q: "Years of experience in benefits?", type: 'buttons', opts: ['0-5 years', '5-10 years', '10-15 years', '15+ years'] },
+    { key: 'clientSize', q: "Your sweet spot client size?", type: 'buttons', opts: ['10-50 employees', '51-200 employees', '201-500 employees', '500+ employees', 'All sizes'] },
+    { key: 'specialty', q: "Primary specialty?", type: 'buttons', opts: ['SMB Focus', 'Enterprise', 'Cost Optimization', 'Tech/Startups', 'Healthcare Industry', 'Full Service'] }
   ];
 
   const questions = role === 'broker' ? brokerQuestions : employerQuestions;
@@ -46,14 +47,36 @@ function ChatContent() {
 
   const addMsg = (r, c) => setMessages(m => [...m, { role: r, content: c }]);
 
+  const validateEmail = (email) => {
+    const validDomains = /\.(com|co|org|edu|net|io|ai|gov|us)$/i;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email) && validDomains.test(email);
+  };
+
   const handleAnswer = (ans) => {
+    // Email validation
+    if (currentQ.key === 'email') {
+      if (!validateEmail(ans)) {
+        setEmailError('Please enter a valid work email (e.g., you@company.com)');
+        return;
+      }
+      setEmailError('');
+    }
+
     addMsg('user', ans);
     const newData = { ...data, [currentQ.key]: ans };
     setData(newData);
 
+    // AI PREDICTION based on location + industry
+    if (role === 'employer' && currentQ.key === 'location') {
+      // Extract city/state for future prediction logic
+      console.log('Location captured for AI prediction:', ans);
+    }
+
+    // EMPLOYER: Show followups after pain point
     if (role === 'employer' && currentQ.key === 'painPoint') {
       setTimeout(() => {
-        addMsg('ai', 'Perfect! 4 quick validation questions (30 seconds)...');
+        addMsg('ai', '✨ Got it! 4 quick questions to find your perfect match (30 sec)...');
         setTimeout(() => {
           setShowFollowups(true);
           setMessages(m => [...m, { role: 'employer-followups' }]);
@@ -62,9 +85,10 @@ function ChatContent() {
       return;
     }
 
+    // BROKER: Show followups after specialty
     if (role === 'broker' && currentQ.key === 'specialty') {
       setTimeout(() => {
-        addMsg('ai', 'Perfect! 4 quick follow-ups to validate our network (30 seconds)...');
+        addMsg('ai', '✨ Perfect! 4 quick questions to optimize your matches (30 sec)...');
         setTimeout(() => {
           setShowFollowups(true);
           setMessages(m => [...m, { role: 'broker-followups' }]);
@@ -73,6 +97,7 @@ function ChatContent() {
       return;
     }
 
+    // Next question
     if (step < questions.length - 1) {
       setStep(step + 1);
       setTimeout(() => addMsg('ai', questions[step + 1].q), 600);
@@ -105,8 +130,8 @@ function ChatContent() {
                   <div className="bg-blue-600 rounded-2xl px-6 py-4 max-w-xl">{m.content}</div>
                 </div>
               )}
-              {m.role === 'employer-followups' && <EmployerFollowups onComplete={() => router.push('/platform/alignment')} />}
-              {m.role === 'broker-followups' && <BrokerFollowups onComplete={() => router.push('/platform/broker/dashboard')} />}
+              {m.role === 'employer-followups' && <EmployerFollowups data={data} onComplete={() => router.push('/platform/alignment')} />}
+              {m.role === 'broker-followups' && <BrokerFollowups data={data} onComplete={() => router.push('/platform/broker/dashboard')} />}
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -115,20 +140,36 @@ function ChatContent() {
 
       <div className="border-t border-slate-700 bg-slate-900/50 p-6">
         <div className="max-w-3xl mx-auto">
-          {!showFollowups && currentQ?.type === 'buttons' && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {currentQ.opts.map(opt => (
-                <button key={opt} onClick={() => handleAnswer(opt)} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm transition">
-                  {opt}
-                </button>
-              ))}
-            </div>
-          )}
-          {!showFollowups && currentQ?.type === 'text' && (
-            <form onSubmit={(e) => { e.preventDefault(); if (input) { handleAnswer(input); setInput(''); } }} className="flex gap-3">
-              <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your answer..." className="flex-1 px-6 py-3 bg-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none" />
-              <button type="submit" className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold transition">Send</button>
-            </form>
+          {!showFollowups && (
+            <>
+              {currentQ?.type === 'buttons' && (
+                <div>
+                  <p className="text-slate-400 text-sm mb-3">{currentQ.q}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {currentQ.opts.map(opt => (
+                      <button key={opt} onClick={() => handleAnswer(opt)} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg text-sm transition">
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {(currentQ?.type === 'text' || currentQ?.type === 'email') && (
+                <form onSubmit={(e) => { e.preventDefault(); if (input) { handleAnswer(input); setInput(''); } }} className="space-y-2">
+                  <input 
+                    value={input} 
+                    onChange={(e) => setInput(e.target.value)} 
+                    placeholder={currentQ.placeholder} 
+                    type={currentQ.type === 'email' ? 'email' : 'text'}
+                    className="w-full px-6 py-4 bg-slate-800 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" 
+                  />
+                  {emailError && <p className="text-red-400 text-sm">{emailError}</p>}
+                  <button type="submit" className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold transition">
+                    Continue →
+                  </button>
+                </form>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -136,22 +177,33 @@ function ChatContent() {
   );
 }
 
-function EmployerFollowups({ onComplete }) {
+function EmployerFollowups({ data, onComplete }) {
   const [a, setA] = useState({});
-  const ready = a.q1 && a.q2 && a.q3 && a.q4;
+  const ready = !!(a.q1 && a.q2 && a.q3 && a.q4);
 
+  // Smart questions based on their pain point
+  const painPoint = data.painPoint || '';
+  
   const qs = [
-    { k: 'q1', q: 'How satisfied are you with your current broker response time?', opts: ['Very satisfied', 'Somewhat satisfied', 'Not satisfied'] },
-    { k: 'q2', q: 'Would you pay $999/month for guaranteed same-day broker response?', opts: ['Yes, definitely', 'Maybe', 'No, too high'] },
-    { k: 'q3', q: 'Which matters more: cost savings or service quality?', opts: ['Cost savings', 'Service quality', 'Both equally'] },
-    { k: 'q4', q: 'How long did your last benefits project take?', opts: ['< 1 month', '1-3 months', '3-6 months', '6+ months'] }
+    { 
+      k: 'q1', 
+      q: painPoint.includes('long') || painPoint.includes('agree') 
+        ? 'How long does your typical benefits decision take?' 
+        : 'How satisfied are you with your current benefits decision process?', 
+      opts: painPoint.includes('long') 
+        ? ['< 1 week', '1-2 weeks', '2-4 weeks', '4+ weeks'] 
+        : ['Very satisfied', 'Somewhat satisfied', 'Not satisfied']
+    },
+    { k: 'q2', q: 'Which stakeholders are typically involved in benefits decisions?', opts: ['Just me', 'CFO + HR', 'CFO + HR + CEO', 'Full team (4+)'] },
+    { k: 'q3', q: 'What would save you the most time?', opts: ['Faster broker responses', 'Better stakeholder alignment', 'Clearer plan comparisons', 'All of the above'] },
+    { k: 'q4', q: 'Ideal benefits cost per employee per month?', opts: ['Under $500', '$500-$700', '$700-$900', '$900+'] }
   ];
 
   return (
     <div className="flex gap-3">
       <div className="w-10 h-10 bg-purple-500 rounded-full flex-shrink-0">📋</div>
       <div className="flex-1 bg-purple-900/30 border-2 border-purple-500/50 rounded-2xl px-6 py-4">
-        <p className="font-bold mb-4">Quick Validation Questions</p>
+        <p className="font-bold mb-4">Quick Match Questions</p>
         <div className="space-y-3 mb-4">
           {qs.map(q => (
             <div key={q.k} className="bg-slate-900/50 rounded p-3">
@@ -175,36 +227,29 @@ function EmployerFollowups({ onComplete }) {
           disabled={!ready}
           className={`w-full py-3 rounded-lg font-bold transition ${ready ? 'bg-purple-600 hover:bg-purple-700 cursor-pointer' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
         >
-          {ready ? '✓ Complete & Start Alignment' : `Answer all 4 (${Object.keys(a).length}/4)`}
+          {ready ? '✓ Find My Matches' : `Answer all 4 (${Object.keys(a).length}/4)`}
         </button>
       </div>
     </div>
   );
 }
 
-function BrokerFollowups({ onComplete }) {
+function BrokerFollowups({ data, onComplete }) {
   const [a, setA] = useState({});
   const ready = !!(a.q1 && a.q2 && a.q3 && a.q4);
 
   const qs = [
-    { k: 'q1', q: 'Do SMB clients (10-100 employees) get same response time as larger clients?', opts: ['Yes, same service', 'No, enterprise priority', 'Depends on urgency'] },
-    { k: 'q2', q: "What's your minimum client size you'll take on?", opts: ['No minimum', '10-50', '50-100', '100+'] },
-    { k: 'q3', q: 'Would an employer pay $999/month for guaranteed same-day response?', opts: ['Yes, definitely', 'Maybe', 'No, too high'] },
-    { k: 'q4', q: 'Know other brokers who specialize in sub-100 employee companies?', opts: ['Yes, many', 'A few', 'No, rare'] }
+    { k: 'q1', q: 'What % of your leads are qualified (good fit for your services)?', opts: ['<25%', '25-50%', '50-75%', '>75%'] },
+    { k: 'q2', q: 'Average time spent on each new lead before qualification?', opts: ['<30 min', '30-60 min', '1-2 hours', '2+ hours'] },
+    { k: 'q3', q: 'Do smaller clients (10-100 employees) get equal service as enterprise?', opts: ['Yes, same service', 'No, enterprise priority', 'Depends on fit'] },
+    { k: 'q4', q: 'Biggest bottleneck in your sales process?', opts: ['Finding qualified leads', 'Client decision time', 'Stakeholder alignment', 'Pricing negotiations'] }
   ];
-
-  const handleComplete = () => {
-    console.log('Button clicked, ready:', ready, 'answers:', a);
-    if (ready) {
-      onComplete();
-    }
-  };
 
   return (
     <div className="flex gap-3">
       <div className="w-10 h-10 bg-green-500 rounded-full flex-shrink-0">📋</div>
       <div className="flex-1 bg-green-900/30 border-2 border-green-500/50 rounded-2xl px-6 py-4">
-        <p className="font-bold mb-4">Quick Follow-ups</p>
+        <p className="font-bold mb-4">Quick Network Questions</p>
         <div className="space-y-3 mb-4">
           {qs.map(q => (
             <div key={q.k} className="bg-slate-900/50 rounded p-3">
@@ -213,10 +258,7 @@ function BrokerFollowups({ onComplete }) {
                 {q.opts.map(o => (
                   <button 
                     key={o} 
-                    onClick={() => {
-                      console.log('Clicked:', q.k, o);
-                      setA({...a, [q.k]: o});
-                    }} 
+                    onClick={() => setA({...a, [q.k]: o})} 
                     className={`px-3 py-1 rounded text-xs transition ${a[q.k]===o ? 'bg-green-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
                   >
                     {o}
@@ -227,11 +269,11 @@ function BrokerFollowups({ onComplete }) {
           ))}
         </div>
         <button 
-          onClick={handleComplete}
+          onClick={onComplete}
           disabled={!ready}
           className={`w-full py-3 rounded-lg font-bold transition ${ready ? 'bg-green-600 hover:bg-green-700 cursor-pointer' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
         >
-          {ready ? '✓ Complete & View Dashboard' : `Answer all 4 questions (${Object.keys(a).length}/4)`}
+          {ready ? '✓ Complete Setup' : `Answer all 4 (${Object.keys(a).length}/4)`}
         </button>
       </div>
     </div>
