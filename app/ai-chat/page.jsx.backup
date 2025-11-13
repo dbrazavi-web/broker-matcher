@@ -17,7 +17,6 @@ function ChatContent() {
   const [buttonOptions, setButtonOptions] = useState([]);
   const [multiSelect, setMultiSelect] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState([]);
-  const [conversationHistory, setConversationHistory] = useState([]);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -51,7 +50,7 @@ function ChatContent() {
       ? `👋 Hi! I'm RightFit. I see you're focused on ${priorityText}. Let's get you matched. What's your work email?`
       : `👋 Hi! I'm RightFit. What's your work email?`;
     
-    setMessages([{ role: 'ai', content: customGreeting, questionIndex: 0 }]);
+    setMessages([{ role: 'ai', content: customGreeting }]);
     
     try {
       await fetch('http://localhost:8000/api/start-interview', {
@@ -68,9 +67,7 @@ function ChatContent() {
     }
   };
 
-  const addMsg = (r, c, qIdx = null) => {
-    setMessages(m => [...m, { role: r, content: c, questionIndex: qIdx }]);
-  };
+  const addMsg = (r, c) => setMessages(m => [...m, { role: r, content: c }]);
 
   const extractOptions = (text) => {
     const match = text.match(/\(e\.g\.,\s*([^)]+)\)/);
@@ -95,38 +92,10 @@ function ChatContent() {
     return { email: 'user@company.com', name: 'User' };
   };
 
-  const handleEditAnswer = async (messageIndex) => {
-    if (loading || interviewComplete) return;
-    
-    const truncatedMessages = messages.slice(0, messageIndex);
-    setMessages(truncatedMessages);
-    
-    const oldAnswer = messages[messageIndex].content;
-    setInput(oldAnswer);
-    
-    const aiQuestion = truncatedMessages[truncatedMessages.length - 1];
-    if (aiQuestion && aiQuestion.role === 'ai') {
-      const { options, multi } = extractOptions(aiQuestion.content);
-      setButtonOptions(options);
-      setMultiSelect(multi);
-    }
-    
-    setSelectedOptions([]);
-    setTimeout(() => inputRef.current?.focus(), 100);
-  };
-
   const sendMessage = async (userMessage) => {
     if (loading || interviewComplete) return;
 
-    const currentQuestionIndex = Math.floor(messages.length / 2);
-    addMsg('user', userMessage, currentQuestionIndex);
-    
-    setConversationHistory(prev => [...prev, { 
-      questionIndex: currentQuestionIndex, 
-      question: messages[messages.length - 1]?.content, 
-      answer: userMessage 
-    }]);
-    
+    addMsg('user', userMessage);
     setInput('');
     setButtonOptions([]);
     setMultiSelect(false);
@@ -169,7 +138,7 @@ function ChatContent() {
         }
         
         setTimeout(() => {
-          addMsg('ai', question, currentQuestionIndex + 1);
+          addMsg('ai', question);
         }, 600);
       }
     } catch (error) {
@@ -242,6 +211,7 @@ function ChatContent() {
 
       <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full px-4 py-6">
         
+        {/* Agentic AI Badge */}
         <div className="mb-4 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600/10 border border-blue-500/30 rounded-full">
             <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
@@ -259,21 +229,10 @@ function ChatContent() {
                       🤖
                     </div>
                   )}
-                  <div>
-                    <div className={`px-4 py-3 rounded-2xl ${
-                      msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-100'
-                    }`}>
-                      {msg.content}
-                    </div>
-                    
-                    {msg.role === 'user' && !interviewComplete && idx < messages.length - 1 && (
-                      <button
-                        onClick={() => handleEditAnswer(idx)}
-                        className="mt-1 text-xs text-blue-400 hover:text-blue-300 transition flex items-center gap-1"
-                      >
-                        ← Edit answer
-                      </button>
-                    )}
+                  <div className={`px-4 py-3 rounded-2xl ${
+                    msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-100'
+                  }`}>
+                    {msg.content}
                   </div>
                 </div>
               </div>
