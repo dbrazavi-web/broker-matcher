@@ -6,6 +6,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* FORRESTER QUOTE - TOP BANNER */}
+      <div className="bg-gradient-to-r from-emerald-900/30 to-green-900/30 border-b border-emerald-500/40 py-4 px-6">
+        <div className="max-w-7xl mx-auto text-center">
+          <p className="text-slate-200 text-sm md:text-base">
+            <span className="font-bold text-emerald-300">147 executive hours. $36,750 in decision costs.</span> Most benefits RFPs waste this much before implementation even starts.
+            <span className="text-slate-400 text-xs ml-3">— Forrester Total Economic Impact Study 2024</span>
+          </p>
+        </div>
+      </div>
+
       <div className="max-w-6xl mx-auto px-6 py-16">
         
         <div className="text-center mb-12">
@@ -30,7 +40,11 @@ export default function Home() {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>
-            Benefits Decisions in One Day,<br />Not Four Weeks
+            Benefits Decisions in <span style={{
+                background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>Days</span>,<br />Not Four Weeks
           </h2>
           
           <p className="text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed mb-12">
@@ -84,12 +98,13 @@ export default function Home() {
                 <span>Free decision report</span>
               </div>
             </div>
-            <button
+            <div
               onClick={() => router.push('/priorities?role=employer')}
+              style={{ cursor: 'pointer' }}
               className="flex items-center gap-2 text-blue-400 hover:text-blue-300 font-semibold text-sm transition group"
             >
               Start Free →
-            </button>
+            </div>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 transition-all hover:border-purple-500/50">
@@ -118,36 +133,37 @@ export default function Home() {
                 <span>Free to join network</span>
               </div>
             </div>
-            <button
+            <div
               onClick={() => router.push('/priorities?role=broker')}
+              style={{ cursor: 'pointer' }}
               className="flex items-center gap-2 text-purple-400 hover:text-purple-300 font-semibold text-sm transition group"
             >
               Join Network →
-            </button>
+            </div>
           </div>
         </div>
 
         <div className="space-y-4 max-w-4xl mx-auto">
-          <div className="bg-slate-900/50 backdrop-blur border border-blue-500/20 rounded-xl p-5">
+          <div className="bg-amber-50/5 backdrop-blur border border-amber-200/20 rounded-xl p-5">
             <div className="flex items-start gap-3">
               <div className="text-2xl">📊</div>
               <div>
-                <p className="text-white font-semibold italic mb-1">
+                <p className="text-amber-50 font-semibold italic mb-1">
                   "Stakeholder alignment saves $127K+ annually in decision costs"
                 </p>
-                <p className="text-slate-500 text-xs">— McKinsey & Company 2024</p>
+                <p className="text-amber-200/60 text-xs">— McKinsey & Company 2024</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-900/50 backdrop-blur border border-purple-500/20 rounded-xl p-5">
+          <div className="bg-amber-50/5 backdrop-blur border border-amber-200/20 rounded-xl p-5">
             <div className="flex items-start gap-3">
               <div className="text-2xl">📈</div>
               <div>
-                <p className="text-white font-semibold italic mb-1">
+                <p className="text-amber-50 font-semibold italic mb-1">
                   "Benefits-culture misalignment increases turnover by 34%"
                 </p>
-                <p className="text-slate-500 text-xs">— Deloitte 2023</p>
+                <p className="text-amber-200/60 text-xs">— Deloitte 2023</p>
               </div>
             </div>
           </div>
@@ -156,10 +172,10 @@ export default function Home() {
             <div className="flex items-start gap-3">
               <div className="text-2xl">🎯</div>
               <div>
-                <p className="text-white font-semibold italic mb-1">
+                <p className="text-amber-50 font-semibold italic mb-1">
                   "Specialist brokers deliver 2.8x better coverage fit"
                 </p>
-                <p className="text-slate-500 text-xs">— Gartner 2024</p>
+                <p className="text-amber-200/60 text-xs">— Gartner 2024</p>
               </div>
             </div>
           </div>
